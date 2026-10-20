@@ -1,0 +1,14 @@
+{
+  "name": "Chart Kit",
+  "dockerComposeFile": "../compose.yaml",
+  "service": "dev",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "postCreateCommand": "mise run install",
+  "forwardPorts": [4200],
+  "customizations": {
+    "vscode": {
+      "extensions": ["editorconfig.editorconfig", "dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+    }
+  }
+}

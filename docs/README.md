@@ -4,10 +4,10 @@ This directory holds package documentation. It must remain usable as part of a s
 
 ## Structure
 
-| Directory | Purpose |
-| --- | --- |
-| `architecture/` | Package boundaries, contracts, and runtime flow |
-| `decisions/` | Durable package-level decisions and their consequences |
+| Directory       | Purpose                                                |
+| --------------- | ------------------------------------------------------ |
+| `architecture/` | Package boundaries, contracts, and runtime flow        |
+| `decisions/`    | Durable package-level decisions and their consequences |
 
 ## Rules
 

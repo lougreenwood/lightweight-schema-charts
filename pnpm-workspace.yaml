@@ -1,0 +1,8 @@
+packages:
+  - packages/*
+  - test-app
+
+nodeLinker: hoisted
+confirmModulesPurge: false
+onlyBuiltDependencies:
+  - esbuild

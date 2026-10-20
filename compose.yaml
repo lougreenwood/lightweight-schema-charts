@@ -1,0 +1,21 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    working_dir: /workspace
+    init: true
+    volumes:
+      - .:/workspace
+      - chart_kit_node_modules:/workspace/node_modules
+      - chart_kit_charts_node_modules:/workspace/packages/charts/node_modules
+      - chart_kit_ember_charts_node_modules:/workspace/packages/ember-charts/node_modules
+      - chart_kit_test_app_node_modules:/workspace/test-app/node_modules
+      - chart_kit_pnpm_store:/pnpm-store
+    command: ['sleep', 'infinity']
+volumes:
+  chart_kit_node_modules:
+  chart_kit_charts_node_modules:
+  chart_kit_ember_charts_node_modules:
+  chart_kit_test_app_node_modules:
+  chart_kit_pnpm_store:

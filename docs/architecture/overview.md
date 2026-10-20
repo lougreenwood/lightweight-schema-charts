@@ -51,14 +51,14 @@ The Ember package invokes the engine. Other framework consumers can invoke the s
 
 The core expects explicit inputs rather than ambient services:
 
-| Input | Purpose |
-| --- | --- |
-| Chart state | Panes, groups, visible series, stable group identity |
-| Data-source ports | Cursor, samples, and change metadata |
-| Presenter ports | Series descriptors and field projection |
-| Theme | Resolved colors and chart options |
-| Labels | Resolved pane and series text |
-| Diagnostics | Optional reporting for descriptor and adapter failures |
+| Input             | Purpose                                                |
+| ----------------- | ------------------------------------------------------ |
+| Chart state       | Panes, groups, visible series, stable group identity   |
+| Data-source ports | Cursor, samples, and change metadata                   |
+| Presenter ports   | Series descriptors and field projection                |
+| Theme             | Resolved colors and chart options                      |
+| Labels            | Resolved pane and series text                          |
+| Diagnostics       | Optional reporting for descriptor and adapter failures |
 
 ## Lifecycle
 

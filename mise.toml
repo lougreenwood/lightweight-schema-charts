@@ -1,0 +1,48 @@
+[tools]
+node = "24"
+pnpm = "10.34.5"
+
+[tasks.install]
+description = "Install project dependencies inside the repository container"
+run = "scripts/run-in-container.sh pnpm install"
+
+[tasks."install:ci"]
+description = "Install dependencies with the lockfile enforced"
+run = "scripts/run-in-container.sh pnpm install --frozen-lockfile"
+
+[tasks.build]
+description = "Build the project inside the repository container"
+run = "scripts/run-in-container.sh pnpm -r --if-present build"
+
+[tasks.test]
+description = "Run tests inside the repository container"
+depends = ["build"]
+run = "scripts/run-in-container.sh pnpm -r --if-present test"
+
+[tasks.lint]
+description = "Run the language linter inside the repository container"
+run = "scripts/run-in-container.sh pnpm run lint"
+
+[tasks.typecheck]
+description = "Type-check the project inside the repository container"
+run = "scripts/run-in-container.sh pnpm -r --if-present typecheck"
+
+[tasks.format]
+description = "Format the project inside the repository container"
+run = "scripts/run-in-container.sh pnpm exec prettier . --write"
+
+[tasks."format:check"]
+description = "Check formatting inside the repository container"
+run = "scripts/run-in-container.sh pnpm exec prettier . --check"
+
+[tasks."container:shell"]
+description = "Open a shell in the repository container"
+run = "CONTAINER_TTY=1 scripts/run-in-container.sh sh"
+
+[tasks."container:up"]
+description = "Start the repository container"
+run = "scripts/compose.sh up -d dev"
+
+[tasks."container:down"]
+description = "Stop the repository container"
+run = "scripts/compose.sh down"
