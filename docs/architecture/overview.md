@@ -1,6 +1,6 @@
 # Architecture overview
 
-Status: planned boundary. The packages do not yet contain runtime source.
+Status: workspace scaffold exists; runtime boundary planned. The packages do not yet contain runtime source.
 
 ## Responsibilities
 
