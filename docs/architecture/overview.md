@@ -1,12 +1,12 @@
 # Architecture overview
 
-Status: workspace scaffold exists; runtime boundary planned. The packages do not yet contain runtime source.
+Status: workspace scaffold and pure snapshot/diff functions exist. Rendering ports, adapters, chart engine, and real Ember binding remain planned; chart rendering and lifecycle are not yet proven.
 
-## Responsibilities
+## Intended responsibilities
 
-### `@chart-kit/core`
+### `@lightweight-schema-charts/core`
 
-The core package owns chart behavior that is independent of a UI framework:
+The core package is intended to own chart behavior that is independent of a UI framework:
 
 - Normalized chart state describing panes, series groups, and visible series.
 - Narrow data-source and presenter ports.
@@ -18,9 +18,9 @@ The core package owns chart behavior that is independent of a UI framework:
 
 Console and DOM dependencies are allowed. Framework runtimes, application registries, application models, and ambient theme services are not.
 
-### `@chart-kit/ember`
+### `@lightweight-schema-charts/ember`
 
-The Ember package adapts the core to an Ember host:
+The Ember package is intended to adapt the core to an Ember host:
 
 - Receives tracked state and presentation inputs.
 - Schedules DOM work after render.
@@ -29,13 +29,15 @@ The Ember package adapts the core to an Ember host:
 
 It does not reimplement series creation or reconciliation.
 
-## Data flow
+The remaining sections describe the intended design. Only snapshot capture and change detection exist today.
+
+## Data flow (intended)
 
 ```text
 Consumer state and data ports
         │
         ▼
-@chart-kit/core chart engine
+@lightweight-schema-charts/core chart engine
         │
         ├─ diff structural/data changes
         ├─ create/update/remove panes and series

@@ -1,6 +1,6 @@
-# @chart-kit/ember
+# @lightweight-schema-charts/ember
 
-Ember integration for mounting, updating, and destroying a chart built with `@chart-kit/core`.
+Ember integration for mounting, updating, and destroying a chart built with `@lightweight-schema-charts/core`.
 
 ## Status
 
@@ -22,4 +22,4 @@ mise run install
 mise run build
 ```
 
-Package-local commands are available through `pnpm --filter @chart-kit/ember <script>` from inside the repository container.
+Package-local commands are available through `pnpm --filter @lightweight-schema-charts/ember <script>` from inside the repository container.

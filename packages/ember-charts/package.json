@@ -1,8 +1,8 @@
 {
-  "name": "@chart-kit/ember",
+  "name": "@lightweight-schema-charts/ember",
   "version": "0.0.0",
   "private": true,
-  "description": "Ember integration for mounting, updating, and destroying Chart Kit charts.",
+  "description": "Ember integration for mounting, updating, and destroying Lightweight Schema Charts charts.",
   "keywords": [
     "ember-addon"
   ],
@@ -30,7 +30,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rollup --config && pnpm exec ember-tsc --declaration --project tsconfig.publish.json",
+    "build": "rollup --config",
     "format": "prettier . --cache --write",
     "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\" --prefixColors auto",
     "lint:fix": "concurrently \"pnpm:lint:*:fix\" --names \"fix:\" --prefixColors auto && pnpm run format",
@@ -40,12 +40,26 @@
     "lint:js": "eslint .",
     "lint:js:fix": "eslint . --fix",
     "lint:types": "ember-tsc --noEmit",
-    "typecheck": "ember-tsc --noEmit"
+    "typecheck": "ember-tsc --noEmit",
+    "build:declarations": "pnpm exec ember-tsc --declaration --project tsconfig.publish.json"
   },
   "dependencies": {
-    "@chart-kit/core": "workspace:*",
     "@embroider/addon-shim": "^1.8.9",
-    "decorator-transforms": "^2.2.2"
+    "@lightweight-schema-charts/core": "workspace:*",
+    "@warp-drive/core": "5.8.2",
+    "@warp-drive/core-types": "5.8.2",
+    "@warp-drive/legacy": "5.8.2",
+    "@warp-drive/schema-record": "5.8.2",
+    "decorator-transforms": "^2.2.2",
+    "ember-modifier": "^4.3.0",
+    "fancy-canvas": "^2.1.0",
+    "lightweight-charts": "5.1.0",
+    "lodash-es": "^4.18.1",
+    "parse-duration-ms": "^0.1.0",
+    "pino": "9.5.0",
+    "stable-hash": "^0.0.6",
+    "true-myth": "9.3.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -61,6 +75,7 @@
     "@glint/template": "^1.6.1",
     "@glint/tsserver-plugin": "^2.0.0",
     "@rollup/plugin-babel": "^6.0.4",
+    "@types/lodash-es": "^4.17.12",
     "babel-plugin-ember-template-compilation": "^4.0.0",
     "concurrently": "^9.0.1",
     "ember-source": "^6.7.0",

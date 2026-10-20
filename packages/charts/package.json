@@ -1,5 +1,5 @@
 {
-  "name": "@chart-kit/core",
+  "name": "@lightweight-schema-charts/core",
   "version": "0.0.0",
   "description": "Framework-neutral chart engine around Lightweight Charts.",
   "private": true,

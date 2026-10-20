@@ -39,6 +39,10 @@ run = "scripts/run-in-container.sh pnpm exec prettier . --check"
 description = "Open a shell in the repository container"
 run = "CONTAINER_TTY=1 scripts/run-in-container.sh sh"
 
+[tasks."container:run"]
+description = "Run a command inside the repository container without a terminal"
+run = "scripts/run-in-container.sh"
+
 [tasks."container:up"]
 description = "Start the repository container"
 run = "scripts/compose.sh up -d dev"

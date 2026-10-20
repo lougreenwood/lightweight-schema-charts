@@ -1,4 +1,4 @@
-# Chart Kit
+# Lightweight Schema Charts
 
 Independent chart packages for building interactive financial charts with Lightweight Charts.
 
@@ -8,10 +8,10 @@ The workspace, repository-owned development container, package builds, and Ember
 
 ## Packages
 
-| Package            | Purpose                                                                              |
-| ------------------ | ------------------------------------------------------------------------------------ |
-| `@chart-kit/core`  | Framework-neutral chart engine, state contracts, series adapters, and reconciliation |
-| `@chart-kit/ember` | Ember integration for mounting, updating, and destroying a chart                     |
+| Package                            | Purpose                                                                              |
+| ---------------------------------- | ------------------------------------------------------------------------------------ |
+| `@lightweight-schema-charts/core`  | Framework-neutral chart engine, state contracts, series adapters, and reconciliation |
+| `@lightweight-schema-charts/ember` | Ember integration for mounting, updating, and destroying a chart                     |
 
 The package names are working names until public naming is settled.
 
@@ -20,8 +20,8 @@ The package names are working names until public naming is settled.
 ```text
 charts/
 ├── packages/
-│   ├── charts/              @chart-kit/core
-│   └── ember-charts/        @chart-kit/ember
+│   ├── charts/              @lightweight-schema-charts/core
+│   └── ember-charts/        @lightweight-schema-charts/ember
 ├── test-app/                Ember integration test application
 └── docs/
     ├── architecture/
@@ -33,7 +33,7 @@ The Dev Container forwards port 4200 for the test application.
 ## Dependency direction
 
 ```text
-Ember host ─→ @chart-kit/ember ─→ @chart-kit/core ─→ lightweight-charts
+Ember host ─→ @lightweight-schema-charts/ember ─→ @lightweight-schema-charts/core ─→ lightweight-charts
 ```
 
 The core package is framework-neutral. It does not depend on Ember, Glimmer, an application store, a component library, or this repository's test application.
@@ -49,7 +49,7 @@ The first working milestone will provide:
 - One Ember runtime test using deterministic synthetic candles to verify mount, update, and destruction.
 - A host application built with the package rather than directly against source files.
 
-The current workspace contains the buildable package and test-app scaffolding. The chart runtime implementation follows.
+The current workspace contains the buildable packages, pure snapshot/diff functions, and test-app scaffolding. The chart engine, rendering ports, adapters, and real Ember binding remain unimplemented.
 
 Documentation websites, publication, a complete test matrix, and a stable public API are not part of this milestone.
 

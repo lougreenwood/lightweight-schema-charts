@@ -1,5 +1,5 @@
 {
-  "name": "chart-kit",
+  "name": "lightweight-schema-charts",
   "private": true,
   "packageManager": "pnpm@10.34.5",
   "engines": {

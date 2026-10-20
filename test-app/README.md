@@ -1,4 +1,4 @@
-# Chart Kit test app
+# Lightweight Schema Charts test app
 
 A small Ember application that consumes the packages in this repository.
 
