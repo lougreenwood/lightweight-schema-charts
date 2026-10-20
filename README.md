@@ -69,6 +69,10 @@ mise run test
 
 Run `mise run container:shell` to open a shell inside the container, then use package-local `pnpm` commands.
 
+### Container volumes
+
+Every workspace package with its own dependencies needs a `node_modules` named volume in `compose.yaml`. The root `node_modules` volume is not enough for pnpm's package-local links.
+
 ## License
 
 Not yet selected. Do not publish or redistribute this repository until licensing is settled.
