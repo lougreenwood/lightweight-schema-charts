@@ -50,3 +50,8 @@ run = "scripts/compose.sh up -d dev"
 [tasks."container:down"]
 description = "Stop the repository container"
 run = "scripts/compose.sh down"
+
+[tasks.dev]
+description = "Run the demo app on http://localhost:4200"
+depends = ["container:up"]
+run = "scripts/compose.sh exec -T dev pnpm --filter test-app start"

@@ -5,6 +5,8 @@ services:
       dockerfile: .devcontainer/Dockerfile
     working_dir: /workspace
     init: true
+    ports:
+      - '4200:4200'
     volumes:
       - .:/workspace
       - chart_kit_node_modules:/workspace/node_modules

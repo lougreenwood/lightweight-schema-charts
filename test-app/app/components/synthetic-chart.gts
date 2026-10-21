@@ -5,7 +5,7 @@ import { ChartLwcAdapterModifier } from '@lightweight-schema-charts/ember';
 import { createSyntheticChart } from 'test-app/synthetic/synthetic-chart';
 
 export default class SyntheticChart extends Component {
-  @tracked candleCount = 3;
+  @tracked candleCount = 120;
 
   get chart() {
     return createSyntheticChart({ candleCount: this.candleCount });
@@ -17,7 +17,7 @@ export default class SyntheticChart extends Component {
 
   <template>
     <div
-      style="height: 320px; width: 640px"
+      style="height: 420px; width: 100%"
       {{ChartLwcAdapterModifier
         this.chart.state
         this.chart.registry
