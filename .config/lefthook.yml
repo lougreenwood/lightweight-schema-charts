@@ -1,0 +1,13 @@
+# Pre-commit checks. Run `pnpm exec lefthook install` once per clone.
+#
+# Formatting runs inside the repository container, so the hook does not require
+# host Node or host dependencies. Lint and typecheck run in CI rather than here
+# because they are workspace-scoped and too slow for a commit.
+
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      glob: '*.{ts,gts,js,mjs,cjs,json,md,yml,yaml,css,hbs}'
+      run: ./scripts/run-in-container.sh pnpm exec prettier --write {staged_files}
+      stage_fixed: true

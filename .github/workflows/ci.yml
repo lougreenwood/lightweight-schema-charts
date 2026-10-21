@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the development container
+        run: docker compose build dev
+
+      - name: Install dependencies
+        run: docker compose run --rm -T dev pnpm install --frozen-lockfile
+
+      - name: Build
+        run: docker compose run --rm -T dev pnpm -r --if-present build
+
+      - name: Lint
+        run: docker compose run --rm -T dev pnpm -r --if-present lint
+
+      - name: Typecheck
+        run: docker compose run --rm -T dev pnpm -r --if-present typecheck
+
+      - name: Test
+        run: docker compose run --rm -T dev pnpm -r --if-present test
+
+      - name: Format check
+        run: docker compose run --rm -T dev pnpm exec prettier . --check
