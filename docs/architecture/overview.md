@@ -1,80 +1,55 @@
 # Architecture overview
 
-Status: workspace scaffold and pure snapshot/diff functions exist. Rendering ports, adapters, chart engine, and real Ember binding remain planned; chart rendering and lifecycle are not yet proven.
+Status: the Ember package renders and reconciles a chart. The framework-neutral core is a placeholder, and discrete event streams are a design direction rather than an implementation.
 
-## Intended responsibilities
+## What the package does
 
-### `@lightweight-schema-charts/core`
+A consumer declares data streams. Presenters describe what each stream contains and how to project it. The schema composes those declarations into panes, groups, and visible series. A modifier reconciles the composed state into Lightweight Charts and updates it incrementally.
 
-The core package is intended to own chart behavior that is independent of a UI framework:
+The package never reads a consumer's models. Everything it needs arrives through contracts.
 
-- Normalized chart state describing panes, series groups, and visible series.
-- Narrow data-source and presenter ports.
-- Snapshot and change detection.
-- Reconciliation of state into Lightweight Charts panes and series.
-- Six series adapters and time/value conversion.
-- Chart creation, update, and destruction.
-- Receipt of resolved theme values, labels, and diagnostics from the consumer.
-
-Console and DOM dependencies are allowed. Framework runtimes, application registries, application models, and ambient theme services are not.
-
-### `@lightweight-schema-charts/ember`
-
-The Ember package is intended to adapt the core to an Ember host:
-
-- Receives tracked state and presentation inputs.
-- Schedules DOM work after render.
-- Coordinates chart updates.
-- Owns destruction and cancels pending work when the host is destroyed.
-
-It does not reimplement series creation or reconciliation.
-
-The remaining sections describe the intended design. Only snapshot capture and change detection exist today.
-
-## Data flow (intended)
+## Layers
 
 ```text
-Consumer state and data ports
-        │
-        ▼
-@lightweight-schema-charts/core chart engine
-        │
-        ├─ diff structural/data changes
-        ├─ create/update/remove panes and series
-        └─ destroy upstream chart state
-        │
-        ▼
+consumer models
+      │
+      ▼
+data providers ──────► streams, cursor, samples, data state, group identity
+presenters ──────────► names, descriptors, default fields, projection
+      │
+      ▼
+chart schema ─────────► panes → groups → series (derived, not synchronised)
+      │
+      ▼
+modifier ─────────────► create, backfill, update, remove
+      │
+      ▼
 Lightweight Charts
 ```
 
-The Ember package invokes the engine. Other framework consumers can invoke the same core directly.
+## Responsibilities
 
-## Inputs
+**Consumer.** Supplies providers, a presenter factory, and a small domain context. Owns models, fetching policy, and anything above the chart.
 
-The core expects explicit inputs rather than ambient services:
+**Providers.** One per data source. Expose stream identifiers, a default layout fragment, a cursor, incremental fetching, plain data state, and a stable group identity.
 
-| Input             | Purpose                                                |
-| ----------------- | ------------------------------------------------------ |
-| Chart state       | Panes, groups, visible series, stable group identity   |
-| Data-source ports | Cursor, samples, and change metadata                   |
-| Presenter ports   | Series descriptors and field projection                |
-| Theme             | Resolved colors and chart options                      |
-| Labels            | Resolved pane and series text                          |
-| Diagnostics       | Optional reporting for descriptor and adapter failures |
+**Presenters.** One per stream. Declare names, structural descriptors, default visible fields, and the projection from a raw sample to a series point.
 
-## Lifecycle
+**Schema.** Derives chart state from layout and provider membership. It stores no duplicate copy of that state, so stale state is structurally impossible. It owns layout composition: default fragments from providers, then the consumer's visibility and ordering overlay.
 
-1. Mount creates the Lightweight Charts instance and initial panes.
-2. Each state update is diffed against the previous snapshot.
-3. Structural changes add or remove pane groups.
-4. Data changes append new values or rebuild a series when identity changed.
-5. Destroy removes series, panes, and the upstream chart instance.
-6. The host cancels scheduled work before or during destruction.
+**Modifier.** Owns the chart instance and applies state changes. It creates the chart once, schedules work after render, and reconciles additions, removals, rebuilds, updates, and renames.
 
-## Non-goals
+## Contracts
 
-- A multi-renderer abstraction over multiple chart libraries.
-- Application data fetching or schema registries.
-- Toolbars, dialogs, menus, or settings interfaces.
-- Server-side rendering.
-- A public API frozen before the integration test proves the first use case.
+| Contract | Direction | Purpose |
+| --- | --- | --- |
+| `DataProviderLike` | consumer → package | Streams, cursor, fetching, data state, group identity |
+| `DataStreamPresenterLike` | consumer → package | Names, descriptors, default fields, projection |
+| `DataStreamPresenterFactory` | consumer → package | Maps the consumer's provider types to presenters |
+| `ChartState` | package internal | Panes, groups, series fields, data state |
+
+## Related documents
+
+- [Streams and samples](streams-and-samples.md)
+- [Composition and reconciliation](composition-and-reconciliation.md)
+- [Roadmap](../../ROADMAP.md)
