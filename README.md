@@ -8,6 +8,10 @@ Instead of imperatively creating series and pushing points, a consumer declares 
 
 The Ember package renders a working chart and is covered by an acceptance test that mounts it, updates the data, and tears it down. Nothing is published.
 
+![A candlestick chart rendered from synthetic data](docs/assets/chart.png)
+
+*120 synthetic candles rendered as a candlestick series in a single pane. The title is composed from the instrument, provider, stream, and field; the price scale and crosshair are Lightweight Charts.*
+
 Two things are deliberately incomplete. The framework-neutral core is a placeholder, and the renderer currently lives entirely in the Ember package. The repository is moving toward the dependency direction below rather than claiming it today.
 
 ## Packages
