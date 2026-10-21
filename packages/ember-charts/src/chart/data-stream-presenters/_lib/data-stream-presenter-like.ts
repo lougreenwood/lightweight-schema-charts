@@ -1,18 +1,18 @@
-import type { DataProviderLike } from '#src/chart/data-providers/_lib/data-provider-like';
+import type { DataProviderLike } from '../../data-providers/_lib/data-provider-like';
 import type {
   BaseChartDataSample,
   DataStreamIdentifier,
-} from '#src/chart/data-providers/_lib/data-stream/types';
+} from '../../data-providers/_lib/data-stream/types';
 import type {
   ChartLayoutFragmentData,
   BaseStructuralDescriptor,
   SeriesPath,
-} from '#src/chart/schema/types';
-import type { SeriesAdapterInternalPoint } from '#src/chart/series-adapters/_lib/_adapter';
+} from '../../schema/types';
+import type { SeriesAdapterInternalPoint } from '../../series-adapters/_lib/_adapter';
 import type {
   MakeTArgs,
   UseArgs,
-} from '#src/vendor/shared-utils/type-utils/resolve-args';
+} from '../../../vendor/shared-utils/type-utils/resolve-args';
 import type { Result } from 'true-myth/result';
 
 /**

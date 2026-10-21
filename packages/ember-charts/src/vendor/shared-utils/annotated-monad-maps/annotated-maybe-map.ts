@@ -3,12 +3,12 @@ import type { Maybe } from 'true-myth';
 import type {
   AnnotatedMaybeMap,
   AnnotatedMaybeMapOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-maybe-map/types';
+} from './annotated-maybe-map/types';
 
 export type {
   AnnotatedMaybeMap,
   AnnotatedMaybeMapOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-maybe-map/types';
+} from './annotated-maybe-map/types';
 
 /** Wraps pre-built entries into a ReadonlyMap. */
 export function makeAnnotatedMaybeMap<

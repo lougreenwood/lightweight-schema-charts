@@ -1,4 +1,4 @@
-import type { FilterFieldType } from '#src/vendor/shared-utils/filtering/types';
+import type { FilterFieldType } from '../types';
 
 export type BooleanFilter =
   ExistenceFilter | { readonly op: 'eq' | 'ne'; readonly val: boolean };

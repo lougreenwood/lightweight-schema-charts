@@ -2,15 +2,15 @@ import type {
   MillisecondsValidationError,
   SuffixInvariantViolationError,
   WindowSuffixes,
-} from '#src/vendor/shared-utils/time-normalization/types';
+} from './time-normalization/types';
 
 export type {
   MillisecondsValidationError,
   SuffixInvariantViolationError,
   WindowSuffixes,
 };
-import { InvariantViolationError } from '#src/vendor/shared-utils/errors/invariant-violation-error';
-import { ValidationError } from '#src/vendor/shared-utils/errors/validation-error';
+import { InvariantViolationError } from './errors/invariant-violation-error';
+import { ValidationError } from './errors/validation-error';
 import { Result } from 'true-myth';
 import { err, ok } from 'true-myth/result';
 

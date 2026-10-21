@@ -1,7 +1,7 @@
-import type { SeriesType } from '#src/chart/series-adapters/_lib/_registry/types';
-import type { NotFoundError } from '#src/vendor/shared-utils/errors/not-found-error';
+import type { SeriesType } from './types';
+import type { NotFoundError } from '../../../../vendor/shared-utils/errors/not-found-error';
 
-import { NotFoundError as NotFoundErrorFactory } from '#src/vendor/shared-utils/errors/not-found-error';
+import { NotFoundError as NotFoundErrorFactory } from '../../../../vendor/shared-utils/errors/not-found-error';
 
 /**
  * Error when no series adapter is registered for the requested series type.

@@ -1,8 +1,8 @@
-import type { FilterValueFor } from '#src/vendor/shared-utils/filtering/filter-value/types';
+import type { FilterValueFor } from './filter-value/types';
 import type {
   FilterFieldType,
   FilterOperator,
-} from '#src/vendor/shared-utils/filtering/types';
+} from './types';
 
 export function decodeFilterValue<F extends FilterFieldType>({
   fieldType,

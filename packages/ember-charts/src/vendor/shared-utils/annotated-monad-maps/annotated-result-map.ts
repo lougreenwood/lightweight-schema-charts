@@ -1,15 +1,15 @@
-import type { AppError } from '#src/vendor/shared-utils/errors/app-error';
+import type { AppError } from '../errors/app-error';
 import type { Result } from 'true-myth';
 
 import type {
   AnnotatedResultMap,
   AnnotatedResultMapOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-result-map/types';
+} from './annotated-result-map/types';
 
 export type {
   AnnotatedResultMap,
   AnnotatedResultMapOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-result-map/types';
+} from './annotated-result-map/types';
 
 /** Wraps pre-built entries into a ReadonlyMap. */
 export function makeAnnotatedResultMap<

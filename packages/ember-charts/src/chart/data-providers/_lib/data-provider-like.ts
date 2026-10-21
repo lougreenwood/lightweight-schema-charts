@@ -20,20 +20,20 @@
  * which is a discriminated union of all concrete provider types that supports narrowing via type guards.
  */
 
-import type { DataProviderIdentifier } from '#src/chart/data-providers/_lib/abstract-data-provider/types';
+import type { DataProviderIdentifier } from './abstract-data-provider/types';
 import type {
   BaseChartDataSample,
   DataProviderCursor,
   DataStreamIdentifier,
   DataStreamUpdateBatch,
-} from '#src/chart/data-providers/_lib/data-stream/types';
+} from './data-stream/types';
 import type {
   DataProviderNoCursorForStreamError,
   DataProviderNoNewDataError,
   DataProviderUnknownStreamError,
   DataStreamHasNoDataError,
-} from '#src/chart/data-providers/errors';
-import type { ChartLayoutFragmentData } from '#src/chart/schema/types';
+} from '../errors';
+import type { ChartLayoutFragmentData } from '../../schema/types';
 import type { Result } from 'true-myth';
 
 /**

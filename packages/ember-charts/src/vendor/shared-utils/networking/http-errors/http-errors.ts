@@ -28,7 +28,7 @@
 import type {
   HasLogger,
   LogSeverity,
-} from '#src/vendor/shared-utils/logger/types';
+} from '../../logger/types';
 import type {
   Http4xxClientError,
   Http5xxServerError,
@@ -46,14 +46,14 @@ import type {
   HttpStatus4xx,
   HttpStatus5xx,
   HttpUnknownError,
-} from '#src/vendor/shared-utils/networking/http-errors/error-types';
+} from './error-types';
 
-import { NotFoundError } from '#src/vendor/shared-utils/errors/not-found-error';
-import { RateLimitedError } from '#src/vendor/shared-utils/errors/rate-limited-error';
-import { TimeoutError } from '#src/vendor/shared-utils/errors/timeout-error';
-import { UnauthorizedError } from '#src/vendor/shared-utils/errors/unauthorized-error';
-import { UnavailableError } from '#src/vendor/shared-utils/errors/unavailable-error';
-import { UpstreamError } from '#src/vendor/shared-utils/errors/upstream-error';
+import { NotFoundError } from '../../errors/not-found-error';
+import { RateLimitedError } from '../../errors/rate-limited-error';
+import { TimeoutError } from '../../errors/timeout-error';
+import { UnauthorizedError } from '../../errors/unauthorized-error';
+import { UnavailableError } from '../../errors/unavailable-error';
+import { UpstreamError } from '../../errors/upstream-error';
 
 /**
  * Shared base args for all HTTP error factories.

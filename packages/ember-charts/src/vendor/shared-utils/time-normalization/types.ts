@@ -1,5 +1,5 @@
-import type { InvariantViolationError } from '#src/vendor/shared-utils/errors/invariant-violation-error';
-import type { ValidationError } from '#src/vendor/shared-utils/errors/validation-error';
+import type { InvariantViolationError } from '../errors/invariant-violation-error';
+import type { ValidationError } from '../errors/validation-error';
 
 export type MillisecondsValidationError = ValidationError<{
   errorCode: 'INVALID_MILLISECONDS';

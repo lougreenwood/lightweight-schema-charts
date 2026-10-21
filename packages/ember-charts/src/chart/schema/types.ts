@@ -1,14 +1,14 @@
-import type { AnchoredPanePrimitive } from '#src/chart/chart-ui/primitives/anchored-text';
-import type { DataProviderLike } from '#src/chart/data-providers/_lib/data-provider-like';
+import type { AnchoredPanePrimitive } from '../chart-ui/primitives/anchored-text';
+import type { DataProviderLike } from '../data-providers/_lib/data-provider-like';
 import type {
   DataProviderCursor,
   DataStreamIdentifier,
-} from '#src/chart/data-providers/_lib/data-stream/types';
-import type { DataStreamPresenterLike } from '#src/chart/data-stream-presenters/_lib/data-stream-presenter-like';
+} from '../data-providers/_lib/data-stream/types';
+import type { DataStreamPresenterLike } from '../data-stream-presenters/_lib/data-stream-presenter-like';
 import type {
   SeriesAdapterLike,
   SeriesApiLike,
-} from '#src/chart/series-adapters/_lib/_adapter';
+} from '../series-adapters/_lib/_adapter';
 import type { IPaneApi, Time } from 'lightweight-charts';
 
 /**

@@ -1,15 +1,15 @@
-import type { HasLogger } from '#src/vendor/shared-utils/logger/types';
+import type { HasLogger } from '../../logger/types';
 import type {
   HttpError,
   HttpMethod,
   HttpStatus4xx,
   HttpStatus5xx,
-} from '#src/vendor/shared-utils/networking/http-errors/error-types';
-import type { AbortableHttpError } from '#src/vendor/shared-utils/networking/network-requests/fetch-task/errors';
-import type { FetchTaskOptions } from '#src/vendor/shared-utils/networking/network-requests/fetch-task/types';
-import { isAppError } from '#src/vendor/shared-utils/errors/is-app-error';
+} from '../http-errors/error-types';
+import type { AbortableHttpError } from './fetch-task/errors';
+import type { FetchTaskOptions } from './fetch-task/types';
+import { isAppError } from '../../errors/is-app-error';
 
-import { AbortedError } from '#src/vendor/shared-utils/errors/aborted-error';
+import { AbortedError } from '../../errors/aborted-error';
 import {
   http4xxClientError,
   http5xxServerError,
@@ -20,7 +20,7 @@ import {
   httpNetworkUnavailableError,
   httpResponseParseFailedError,
   httpUnknownError,
-} from '#src/vendor/shared-utils/networking/http-errors/http-errors';
+} from '../http-errors/http-errors';
 import { safelyTryOrElse, Task } from 'true-myth/task';
 
 type FetchInput = string | URL | Request;

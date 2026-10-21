@@ -1,11 +1,11 @@
 import type {
   AppError,
   GenericErrorInstance,
-} from '#src/vendor/shared-utils/errors/app-error';
-import type { LogSeverity } from '#src/vendor/shared-utils/logger/types';
+} from './app-error';
+import type { LogSeverity } from '../logger/types';
 import type Result from 'true-myth/result';
 
-import { createAppError } from '#src/vendor/shared-utils/errors/app-error';
+import { createAppError } from './app-error';
 import { err, ok } from 'true-myth/result';
 
 export type FromSerializedAppError<T extends SerializedAppError> =

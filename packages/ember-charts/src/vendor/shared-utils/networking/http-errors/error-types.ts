@@ -14,12 +14,12 @@
  * - Usually non-retryable: HTTP_4XX_CLIENT_ERROR, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
  */
 
-import type { NotFoundError } from '#src/vendor/shared-utils/errors/not-found-error';
-import type { RateLimitedError } from '#src/vendor/shared-utils/errors/rate-limited-error';
-import type { TimeoutError } from '#src/vendor/shared-utils/errors/timeout-error';
-import type { UnauthorizedError } from '#src/vendor/shared-utils/errors/unauthorized-error';
-import type { UnavailableError } from '#src/vendor/shared-utils/errors/unavailable-error';
-import type { UpstreamError } from '#src/vendor/shared-utils/errors/upstream-error';
+import type { NotFoundError } from '../../errors/not-found-error';
+import type { RateLimitedError } from '../../errors/rate-limited-error';
+import type { TimeoutError } from '../../errors/timeout-error';
+import type { UnauthorizedError } from '../../errors/unauthorized-error';
+import type { UnavailableError } from '../../errors/unavailable-error';
+import type { UpstreamError } from '../../errors/upstream-error';
 import type { IntRange } from 'type-fest';
 
 /**

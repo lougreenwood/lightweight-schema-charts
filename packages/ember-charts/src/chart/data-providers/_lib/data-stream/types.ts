@@ -18,13 +18,13 @@
  * - Keep this module small and stable; providers and registries compose on top.
  */
 
-import type { DataProviderIdentifier } from '#src/chart/data-providers/_lib/abstract-data-provider/types';
-import type { DataProviderLike } from '#src/chart/data-providers/_lib/data-provider-like';
-import type { TimeWindow } from '#src/chart/data-providers/_lib/data-stream/time-window';
+import type { DataProviderIdentifier } from '../abstract-data-provider/types';
+import type { DataProviderLike } from '../data-provider-like';
+import type { TimeWindow } from './time-window';
 import type {
   MakeTArgs,
   UseArgs,
-} from '#src/vendor/shared-utils/type-utils/resolve-args';
+} from '../../../../vendor/shared-utils/type-utils/resolve-args';
 
 /**
  * Canonical provider sample used by all providers.

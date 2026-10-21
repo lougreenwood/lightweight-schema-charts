@@ -3,14 +3,14 @@ import type {
   AppErrorOptions,
   GenericErrorArgs,
   MaybeHasLogger,
-} from '#src/vendor/shared-utils/errors/app-error/types';
-import type { LogSeverity } from '#src/vendor/shared-utils/logger/types';
+} from './app-error/types';
+import type { LogSeverity } from '../logger/types';
 
 export type {
   AppErrorArgs,
   AppErrorOptions,
   GenericErrorArgs,
-} from '#src/vendor/shared-utils/errors/app-error/types';
+} from './app-error/types';
 
 export type AppErrorLike = {
   readonly errorCode: string;

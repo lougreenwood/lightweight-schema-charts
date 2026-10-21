@@ -1,7 +1,7 @@
-import { EmptyResultError } from '#src/vendor/shared-utils/errors/empty-result-error';
-import { NotFoundError } from '#src/vendor/shared-utils/errors/not-found-error';
-import { PreconditionError } from '#src/vendor/shared-utils/errors/precondition-error';
-import { ValidationError } from '#src/vendor/shared-utils/errors/validation-error';
+import { EmptyResultError } from '../../vendor/shared-utils/errors/empty-result-error';
+import { NotFoundError } from '../../vendor/shared-utils/errors/not-found-error';
+import { PreconditionError } from '../../vendor/shared-utils/errors/precondition-error';
+import { ValidationError } from '../../vendor/shared-utils/errors/validation-error';
 
 /**
  * Error when creating a data provider with a mismatched id.

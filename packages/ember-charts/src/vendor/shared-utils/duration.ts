@@ -1,4 +1,4 @@
-import { InvariantViolationError } from '#src/vendor/shared-utils/errors/invariant-violation-error';
+import { InvariantViolationError } from './errors/invariant-violation-error';
 import parseDuration from 'parse-duration-ms';
 import prettyMilliseconds from 'pretty-ms';
 

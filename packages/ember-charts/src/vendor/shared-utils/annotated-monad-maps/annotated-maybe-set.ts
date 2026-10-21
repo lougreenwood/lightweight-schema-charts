@@ -1,8 +1,8 @@
 import type {
   AnnotatedMaybeSet,
   AnnotatedMaybeSetOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-maybe-set/types';
-import type { AppError } from '#src/vendor/shared-utils/errors/app-error';
+} from './annotated-maybe-set/types';
+import type { AppError } from '../errors/app-error';
 import type { Maybe } from 'true-myth';
 import type { Task } from 'true-myth/task';
 
@@ -12,7 +12,7 @@ import { resolve } from 'true-myth/task';
 export type {
   AnnotatedMaybeSet,
   AnnotatedMaybeSetOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-maybe-set/types';
+} from './annotated-maybe-set/types';
 
 /** Wraps pre-built entries into a ReadonlySet. */
 export function makeAnnotatedMaybeSet<

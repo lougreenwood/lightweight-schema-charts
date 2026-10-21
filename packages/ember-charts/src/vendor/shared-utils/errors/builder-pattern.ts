@@ -1,4 +1,4 @@
-import type { BuilderPreconditionError } from '#src/vendor/shared-utils/errors/builder-error';
+import type { BuilderPreconditionError } from './builder-error';
 import type { Result, Task } from 'true-myth';
 
 /**

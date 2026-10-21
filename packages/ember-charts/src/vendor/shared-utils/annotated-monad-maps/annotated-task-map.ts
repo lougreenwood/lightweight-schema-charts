@@ -1,4 +1,4 @@
-import type { AppError } from '#src/vendor/shared-utils/errors/app-error';
+import type { AppError } from '../errors/app-error';
 import type { Task } from 'true-myth';
 
 import { all, resolve } from 'true-myth/task';
@@ -6,12 +6,12 @@ import { all, resolve } from 'true-myth/task';
 import type {
   AnnotatedTaskMap,
   AnnotatedTaskMapOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-task-map/types';
+} from './annotated-task-map/types';
 
 export type {
   AnnotatedTaskMap,
   AnnotatedTaskMapOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-task-map/types';
+} from './annotated-task-map/types';
 
 /** Wraps pre-built entries into a ReadonlyMap. */
 export function makeAnnotatedTaskMap<

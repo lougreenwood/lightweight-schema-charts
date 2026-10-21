@@ -1,15 +1,15 @@
 import type {
   ChartTimeSeriesPointOhlc,
   SeriesAdapterWithDescriptor,
-} from '#src/chart/series-adapters/_lib/_adapter';
+} from './_lib/_adapter';
 
-import { translateOptionsToLwc } from '#src/chart/series-adapters/_lib/_adapter';
+import { translateOptionsToLwc } from './_lib/_adapter';
 import {
   mapOhlcSetToCandles,
   ohlcPointToLwc,
   sortOhlcPointsAscending,
-} from '#src/chart/series-adapters/_lib/_lwc-converters';
-import { getCandlestickColors } from '#src/chart/theme/chart-theme';
+} from './_lib/_lwc-converters';
+import { getCandlestickColors } from '../theme/chart-theme';
 import { CandlestickSeries } from 'lightweight-charts';
 
 export type CandleStickPoint = ChartTimeSeriesPointOhlc;

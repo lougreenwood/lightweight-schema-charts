@@ -1,8 +1,8 @@
-import type { DataStreamPresenterFactory } from '#src/chart/data-stream-presenters/_lib/data-stream-presenter-registry/types';
-import type { DataProviderLike } from '#src/chart/data-providers/_lib/data-provider-like';
-import type { ChartLayoutOverlaySnapshot } from '#src/chart/schema/types';
+import type { DataStreamPresenterFactory } from '../data-stream-presenters/_lib/data-stream-presenter-registry/types';
+import type { DataProviderLike } from '../data-providers/_lib/data-provider-like';
+import type { ChartLayoutOverlaySnapshot } from './types';
 
-import { ReactiveChartSchema } from '#src/chart/schema/schema-reactive';
+import { ReactiveChartSchema } from './schema-reactive';
 
 /**
  * Create the chart schema from consumer-supplied providers and presenters.

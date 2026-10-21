@@ -1,4 +1,4 @@
-import type { AppError } from '#src/vendor/shared-utils/errors/app-error';
+import type { AppError } from '../../errors/app-error';
 import type { Task } from 'true-myth';
 
 /**

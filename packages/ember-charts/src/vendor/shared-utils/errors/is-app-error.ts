@@ -1,4 +1,4 @@
-import type { AppError } from '#src/vendor/shared-utils/errors/app-error';
+import type { AppError } from './app-error';
 
 import type { LiteralToPrimitive } from 'type-fest';
 

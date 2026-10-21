@@ -1,17 +1,17 @@
 import type {
   CurrencyValueAssetNotResolvedError,
   CurrencyValueOtherAmountZeroValidationError,
-} from '#src/vendor/shared-utils/currency-value/errors';
+} from './currency-value/errors';
 import type {
   CurrencyValueFixedPoint,
   CurrencyValueFloatingPoint,
   CurrencyValuePrecision,
   CurrencyValueRepresentation,
-} from '#src/vendor/shared-utils/currency-value/types';
-import type { SerializedCurrencyValue } from '#src/vendor/shared-utils/serialized-currency-value';
+} from './currency-value/types';
+import type { SerializedCurrencyValue } from './serialized-currency-value';
 
-import { NotFoundError } from '#src/vendor/shared-utils/errors/not-found-error';
-import { ValidationError } from '#src/vendor/shared-utils/errors/validation-error';
+import { NotFoundError } from './errors/not-found-error';
+import { ValidationError } from './errors/validation-error';
 import { Result } from 'true-myth';
 
 export interface CurrencyValueAssetLike {

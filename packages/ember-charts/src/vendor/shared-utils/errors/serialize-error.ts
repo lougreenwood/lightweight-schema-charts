@@ -3,7 +3,7 @@
  * the cause chain. Handles circular references gracefully.
  */
 
-import { isAppError } from '#src/vendor/shared-utils/errors/is-app-error';
+import { isAppError } from './is-app-error';
 
 export function serializeError(error: Error): string {
   const seen = new WeakSet<object>();

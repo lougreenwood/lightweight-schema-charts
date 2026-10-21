@@ -2,7 +2,7 @@ import {
   createAppError,
   type GenericErrorArgs,
   type GenericErrorInstance,
-} from '#src/vendor/shared-utils/errors/app-error';
+} from './app-error';
 
 /**
  * TimeoutError instance type - use this in type positions.

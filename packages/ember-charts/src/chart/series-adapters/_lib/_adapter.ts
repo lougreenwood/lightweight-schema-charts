@@ -14,7 +14,7 @@
 import type {
   PaneSeriesApiFor,
   SeriesType,
-} from '#src/chart/series-adapters/_lib/_registry/types';
+} from './_registry/types';
 import type {
   DeepPartial,
   IChartApi,

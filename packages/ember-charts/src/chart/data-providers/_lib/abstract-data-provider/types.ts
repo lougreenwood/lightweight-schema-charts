@@ -1,14 +1,14 @@
-import type { DataProviderLike } from '#src/chart/data-providers/_lib/data-provider-like';
+import type { DataProviderLike } from '../data-provider-like';
 import type {
   DataStreamIdentifier,
   DataStreamIdentifierTArgs,
-} from '#src/chart/data-providers/_lib/data-stream/types';
+} from '../data-stream/types';
 import type {
   CreateDataProviderInvalidIdError,
   CreateDataProviderInvalidTypeError,
-} from '#src/chart/data-providers/errors';
-import type { AppError } from '#src/vendor/shared-utils/errors/app-error';
-import type { MakeTArgs } from '#src/vendor/shared-utils/type-utils/resolve-args';
+} from '../../errors';
+import type { AppError } from '../../../../vendor/shared-utils/errors/app-error';
+import type { MakeTArgs } from '../../../../vendor/shared-utils/type-utils/resolve-args';
 import type { Result } from 'true-myth';
 import type { Constructor } from 'type-fest';
 

@@ -1,4 +1,4 @@
-import { ValidationError } from '#src/vendor/shared-utils/errors/validation-error';
+import { ValidationError } from './errors/validation-error';
 import { Result } from 'true-myth';
 
 /**

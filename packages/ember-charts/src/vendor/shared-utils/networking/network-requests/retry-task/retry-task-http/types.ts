@@ -1,5 +1,5 @@
-import type { HasLogger } from '#src/vendor/shared-utils/logger/types';
-import type { AbortableHttpError } from '#src/vendor/shared-utils/networking/network-requests/fetch-task/errors';
+import type { HasLogger } from '../../../../logger/types';
+import type { AbortableHttpError } from '../../fetch-task/errors';
 import type { Task } from 'true-myth';
 import type { Strategy } from 'true-myth/task/delay';
 

@@ -45,7 +45,6 @@
   },
   "dependencies": {
     "@embroider/addon-shim": "^1.8.9",
-    "@lightweight-schema-charts/core": "workspace:*",
     "@warp-drive/core": "5.8.2",
     "@warp-drive/core-types": "5.8.2",
     "@warp-drive/legacy": "5.8.2",
@@ -53,7 +52,6 @@
     "decorator-transforms": "^2.2.2",
     "ember-modifier": "^4.3.0",
     "fancy-canvas": "^2.1.0",
-    "lightweight-charts": "5.1.0",
     "lodash-es": "^4.18.1",
     "parse-duration-ms": "^0.1.0",
     "pino": "9.5.0",
@@ -75,6 +73,7 @@
     "@glint/template": "^1.6.1",
     "@glint/tsserver-plugin": "^2.0.0",
     "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/lodash-es": "^4.17.12",
     "babel-plugin-ember-template-compilation": "^4.0.0",
     "concurrently": "^9.0.1",
@@ -86,6 +85,7 @@
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-n": "^17.15.1",
     "globals": "^16.1.0",
+    "lightweight-charts": "5.1.0",
     "prettier": "^3.4.2",
     "prettier-plugin-ember-template-tag": "^2.0.4",
     "rollup": "^4.22.5",
@@ -93,7 +93,8 @@
     "typescript-eslint": "^8.19.1"
   },
   "peerDependencies": {
-    "ember-source": ">= 6.7.0"
+    "ember-source": ">= 6.7.0",
+    "lightweight-charts": "^5.1.0"
   },
   "engines": {
     "node": ">= 20"

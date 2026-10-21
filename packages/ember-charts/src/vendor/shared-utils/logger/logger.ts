@@ -1,4 +1,4 @@
-import type { ClassLike } from '../../../r/shared-utils/logger/types.js';
+import type { ClassLike } from './types';
 import type pino from 'pino';
 
 /**

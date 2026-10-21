@@ -28,45 +28,45 @@
  * ```
  */
 
-import type { AnchoredPanePrimitive } from '#src/chart/chart-ui/primitives/anchored-text';
-import type { DataProviderLike } from '#src/chart/data-providers/_lib/data-provider-like';
+import type { AnchoredPanePrimitive } from '../chart-ui/primitives/anchored-text';
+import type { DataProviderLike } from '../data-providers/_lib/data-provider-like';
 import type {
   BaseChartDataSample,
   DataProviderCursor,
   DataStreamIdentifier,
-} from '#src/chart/data-providers/_lib/data-stream/types';
-import type { DataStreamPresenterLike } from '#src/chart/data-stream-presenters/_lib/data-stream-presenter-like';
+} from '../data-providers/_lib/data-stream/types';
+import type { DataStreamPresenterLike } from '../data-stream-presenters/_lib/data-stream-presenter-like';
 import type {
   AdapterGroupState,
   ChartDomainContext,
   ChartPaneState,
   ChartSeriesState,
   GroupSnapshot,
-} from '#src/chart/modifiers/chart-lwc-adapter/types';
+} from './chart-lwc-adapter/types';
 import type {
   ChartState,
   GroupId,
   PaneState,
   SeriesGroupState,
   SeriesPath,
-} from '#src/chart/schema/types';
-import type { SeriesAdapterRegistry } from '#src/chart/series-adapters/_lib/_registry';
+} from '../schema/types';
+import type { SeriesAdapterRegistry } from '../series-adapters/_lib/_registry';
 import type { IChartApi, Time } from 'lightweight-charts';
 
-import { createPaneLabelPrimitive } from '#src/chart/chart-ui/primitives/anchored-text';
+import { createPaneLabelPrimitive } from '../chart-ui/primitives/anchored-text';
 import {
   captureGroupSnapshot,
   diffGroupStates,
   flattenStateToGroupMap,
-} from '#src/chart/modifiers/chart-lwc-adapter/diff-group-states';
+} from './chart-lwc-adapter/diff-group-states';
 import {
   findDescriptorWithParent,
   isCompleteLeafStructuralDescriptor,
-} from '#src/chart/schema/utils';
-import { getChartTheme } from '#src/chart/theme/chart-theme';
-import { buildPaneLabel, buildSeriesTitle } from '#src/chart/utils/labels';
-import pinoLogger from '#src/vendor/utils-base/logger/pino-logger';
-import { createScheduleWorkHelper } from '#src/vendor/utils-base/schedule-after-render';
+} from '../schema/utils';
+import { getChartTheme } from '../theme/chart-theme';
+import { buildPaneLabel, buildSeriesTitle } from '../utils/labels';
+import pinoLogger from '../../vendor/utils-base/logger/pino-logger';
+import { createScheduleWorkHelper } from '../../vendor/utils-base/schedule-after-render';
 import Modifier from 'ember-modifier';
 import { createChart, TickMarkType } from 'lightweight-charts';
 

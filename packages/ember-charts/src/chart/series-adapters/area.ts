@@ -1,15 +1,15 @@
 import type {
   ChartTimeSeriesPointNumber,
   SeriesAdapterWithDescriptor,
-} from '#src/chart/series-adapters/_lib/_adapter';
+} from './_lib/_adapter';
 
-import { translateOptionsToLwc } from '#src/chart/series-adapters/_lib/_adapter';
+import { translateOptionsToLwc } from './_lib/_adapter';
 import {
   mapNumberSetToLwcArray,
   numberPointToLwc,
   sortNumberPointsAscending,
-} from '#src/chart/series-adapters/_lib/_lwc-converters';
-import { getSeriesColors } from '#src/chart/theme/chart-theme';
+} from './_lib/_lwc-converters';
+import { getSeriesColors } from '../theme/chart-theme';
 import {
   AreaSeries,
   type DeepPartial,

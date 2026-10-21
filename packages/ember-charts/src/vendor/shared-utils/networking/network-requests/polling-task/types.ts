@@ -1,9 +1,9 @@
-import type { HasLogger } from '#src/vendor/shared-utils/logger/types';
+import type { HasLogger } from '../../../logger/types';
 import type {
   DiscriminatedRetryStrategy,
   TaskRetryStrategyFactory,
   TaskRetryStrategyOptions,
-} from '#src/vendor/shared-utils/networking/network-requests/retry-task/types';
+} from '../retry-task/types';
 import type { Result, Task } from 'true-myth';
 
 export type PollingStrategy =

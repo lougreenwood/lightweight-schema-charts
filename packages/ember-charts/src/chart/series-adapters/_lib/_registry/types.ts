@@ -1,6 +1,6 @@
 import type { IPaneApi, ISeriesApi, Time } from 'lightweight-charts';
 
-import { adapters } from '#src/chart/series-adapters/_lib/_registry';
+import { adapters } from '../_registry';
 
 /**
  * Generic mapping from internal SeriesType -> corresponding LWC series type literal.

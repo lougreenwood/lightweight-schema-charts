@@ -1,11 +1,11 @@
-import type { DataStreamIdentifier } from '#src/chart/data-providers/_lib/data-stream/types';
-import type { GroupId, SeriesPath, SeriesId } from '#src/chart/schema/types';
+import type { DataStreamIdentifier } from '../data-providers/_lib/data-stream/types';
+import type { GroupId, SeriesPath, SeriesId } from './types';
 
-import { InvariantViolationError } from '#src/vendor/shared-utils/errors/invariant-violation-error';
-import { NotFoundError } from '#src/vendor/shared-utils/errors/not-found-error';
-import { PreconditionError } from '#src/vendor/shared-utils/errors/precondition-error';
-import { UnavailableError } from '#src/vendor/shared-utils/errors/unavailable-error';
-import { ValidationError } from '#src/vendor/shared-utils/errors/validation-error';
+import { InvariantViolationError } from '../../vendor/shared-utils/errors/invariant-violation-error';
+import { NotFoundError } from '../../vendor/shared-utils/errors/not-found-error';
+import { PreconditionError } from '../../vendor/shared-utils/errors/precondition-error';
+import { UnavailableError } from '../../vendor/shared-utils/errors/unavailable-error';
+import { ValidationError } from '../../vendor/shared-utils/errors/validation-error';
 
 /**
  * Error when chart operations are attempted before the chart is mounted.

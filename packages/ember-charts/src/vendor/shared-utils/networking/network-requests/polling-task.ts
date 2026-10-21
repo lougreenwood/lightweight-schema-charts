@@ -1,10 +1,10 @@
-import type { PollingTaskOptions } from '#src/vendor/shared-utils/networking/network-requests/polling-task/types';
+import type { PollingTaskOptions } from './polling-task/types';
 import type {
   DiscriminatedRetryStrategy,
   RetryTaskOptions,
-} from '#src/vendor/shared-utils/networking/network-requests/retry-task/types';
+} from './retry-task/types';
 
-import { retryTask } from '#src/vendor/shared-utils/networking/network-requests/retry-task';
+import { retryTask } from './retry-task';
 import { Result, Task } from 'true-myth';
 
 const CONTINUE_POLLING = Symbol('CONTINUE_POLLING');

@@ -1,4 +1,4 @@
-import type { FilterFieldType } from '#src/vendor/shared-utils/filtering/types';
+import type { FilterFieldType } from './types';
 
 /**
  * Map of filter field type to supported operator strings.

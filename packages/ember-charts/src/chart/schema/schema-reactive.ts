@@ -19,13 +19,13 @@
  * callback and derives everything from the returned provider set.
  */
 
-import type { DataProviderLike } from '#src/chart/data-providers/_lib/data-provider-like';
-import type { DataStreamIdentifier } from '#src/chart/data-providers/_lib/data-stream/types';
+import type { DataProviderLike } from '../data-providers/_lib/data-provider-like';
+import type { DataStreamIdentifier } from '../data-providers/_lib/data-stream/types';
 import type {
   DataStreamPresenterLike,
   DataStreamPresenterLikeTArgs,
-} from '#src/chart/data-stream-presenters/_lib/data-stream-presenter-like';
-import type { DataStreamPresenterRegistry } from '../../../../../../../../../data-stream-presenters/_lib/data-stream-presenter-registry';
+} from '../data-stream-presenters/_lib/data-stream-presenter-like';
+import type { DataStreamPresenterFactory } from '../data-stream-presenters/_lib/data-stream-presenter-registry/types';
 import type {
   BaseStructuralDescriptor,
   ChartLayoutData,
@@ -41,17 +41,17 @@ import type {
   SeriesLayout,
   SeriesPath,
   SeriesState,
-} from '#src/chart/schema/types';
+} from './types';
 
 import { cached } from '@glimmer/tracking';
 import {
   ChartLayout,
   type ChartLayoutToggleSeriesError,
-} from '#src/chart/schema/chart-layout';
+} from './chart-layout';
 import {
   type ChartSchemaPresenterNotFoundError,
   createPresenterNotFoundError,
-} from '#src/chart/schema/errors';
+} from './errors';
 import { err, ok, type Result } from 'true-myth/result';
 
 export class ReactiveChartSchema {
@@ -315,7 +315,7 @@ export class ReactiveChartSchema {
     getDataProviders,
     initialLayoutOverlay,
   }: {
-    dataStreamPresenterRegistry: DataStreamPresenterRegistry;
+    dataStreamPresenterRegistry: DataStreamPresenterFactory;
     initialLayoutOverlay?: ChartLayoutOverlaySnapshot;
     getDataProviders: () => ReadonlySet<DataProviderLike>;
   }) {
@@ -390,7 +390,7 @@ export class ReactiveChartSchema {
   }
 
   readonly #chartLayout: ChartLayout;
-  readonly #dataStreamPresenterRegistry: DataStreamPresenterRegistry;
+  readonly #dataStreamPresenterRegistry: DataStreamPresenterFactory;
   readonly #getDataProviders: () => ReadonlySet<DataProviderLike>;
 
   /**

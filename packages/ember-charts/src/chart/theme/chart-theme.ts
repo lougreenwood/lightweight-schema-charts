@@ -13,7 +13,7 @@
  * Usage:
  *
  * ```ts
- * import { getChartTheme } from "#src/chart/theme/chart-theme";
+ * import { getChartTheme } from "./chart-theme";
  *
  * const chart = createChart(element, {
  *   ...getChartTheme(),
@@ -24,7 +24,7 @@
 
 import type { ChartOptions, DeepPartial } from 'lightweight-charts';
 
-import { getCssVar } from '#src/vendor/utils-base/css-color-utils';
+import { getCssVar } from '../../vendor/utils-base/css-color-utils';
 
 /**
  * CSS variable names used by Frontile themes. These are set on :root by the active theme.

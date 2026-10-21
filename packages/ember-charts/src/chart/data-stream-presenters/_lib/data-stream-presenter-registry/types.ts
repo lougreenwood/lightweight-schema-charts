@@ -5,9 +5,9 @@
  * stream identifiers to a presenter implementing DataStreamPresenterLike.
  */
 
-import type { DataProviderLike } from '#src/chart/data-providers/_lib/data-provider-like';
-import type { DataStreamIdentifier } from '#src/chart/data-providers/_lib/data-stream/types';
-import type { DataStreamPresenterLike } from '#src/chart/data-stream-presenters/_lib/data-stream-presenter-like';
+import type { DataProviderLike } from '../../../data-providers/_lib/data-provider-like';
+import type { DataStreamIdentifier } from '../../../data-providers/_lib/data-stream/types';
+import type { DataStreamPresenterLike } from '../data-stream-presenter-like';
 
 export type DataStreamPresenterFactory = Readonly<{
   makeDataStreamPresenter(input: {

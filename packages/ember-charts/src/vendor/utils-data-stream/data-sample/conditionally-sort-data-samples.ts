@@ -1,4 +1,4 @@
-import type { TimedSample } from '#src/vendor/utils-data-stream/data-sample/get-samples-since';
+import type { TimedSample } from './get-samples-since';
 
 export type DataSampleSortDirection = 'ascending' | 'descending';
 

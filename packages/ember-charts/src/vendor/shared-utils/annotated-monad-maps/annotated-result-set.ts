@@ -1,15 +1,15 @@
-import type { AppError } from '#src/vendor/shared-utils/errors/app-error';
+import type { AppError } from '../errors/app-error';
 import type { Result } from 'true-myth';
 
 import type {
   AnnotatedResultSet,
   AnnotatedResultSetOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-result-set/types';
+} from './annotated-result-set/types';
 
 export type {
   AnnotatedResultSet,
   AnnotatedResultSetOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-result-set/types';
+} from './annotated-result-set/types';
 
 /** Wraps pre-built entries into a ReadonlySet. */
 export function makeAnnotatedResultSet<

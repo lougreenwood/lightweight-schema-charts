@@ -17,7 +17,7 @@
  * invalidation paths cause the merged `.layout` to recompute.
  */
 
-import type { DataStreamIdentifier } from '#src/chart/data-providers/_lib/data-stream/types';
+import type { DataStreamIdentifier } from '../data-providers/_lib/data-stream/types';
 import type {
   ChartLayoutData,
   ChartLayoutOverlaySnapshot,
@@ -25,10 +25,10 @@ import type {
   SeriesIdentifier,
   SeriesLayout,
   SeriesPath,
-} from '#src/chart/schema/types';
+} from './types';
 
 import { tracked } from '@glimmer/tracking';
-import { NotFoundError } from '#src/vendor/shared-utils/errors/not-found-error';
+import { NotFoundError } from '../../vendor/shared-utils/errors/not-found-error';
 import { err, ok, type Result } from 'true-myth/result';
 
 /**
@@ -264,7 +264,7 @@ export class ChartLayout {
   }: {
     group: {
       readonly groupId: GroupId;
-      readonly priceScale?: import('#src/chart/schema/types').PriceScaleLayout;
+      readonly priceScale?: import('./types').PriceScaleLayout;
       readonly series: ReadonlyArray<SeriesLayout>;
       readonly stableLayoutKey: string;
       readonly streamType: string;

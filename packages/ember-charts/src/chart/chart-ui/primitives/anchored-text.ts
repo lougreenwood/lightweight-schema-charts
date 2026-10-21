@@ -20,7 +20,7 @@ import type {
 
 import { CanvasRenderingTarget2D } from 'fancy-canvas';
 
-import { getPaneLabelColor } from '#src/chart/theme/chart-theme';
+import { getPaneLabelColor } from '../../theme/chart-theme';
 
 /**
  * AnchoredTextOptions

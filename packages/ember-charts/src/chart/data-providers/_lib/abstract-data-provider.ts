@@ -3,14 +3,14 @@ import type {
   DataProviderIdentifier,
   InferDataProviderIdentifier,
   InferDataSource,
-} from '#src/chart/data-providers/_lib/abstract-data-provider/types';
-import type { DataProviderLike } from '#src/chart/data-providers/_lib/data-provider-like';
+} from './abstract-data-provider/types';
+import type { DataProviderLike } from './data-provider-like';
 import type {
   BaseChartDataSample,
   DataProviderCursor,
   DataStreamIdentifier,
   DataStreamUpdateBatch,
-} from '#src/chart/data-providers/_lib/data-stream/types';
+} from './data-stream/types';
 import type {
   CreateDataProviderInvalidIdError,
   CreateDataProviderInvalidTypeError,
@@ -18,10 +18,10 @@ import type {
   DataProviderNoNewDataError,
   DataProviderUnknownStreamError,
   DataStreamHasNoDataError,
-} from '#src/chart/data-providers/errors';
-import type { ChartLayoutFragmentData } from '#src/chart/schema/types';
-import type { TimeWindow } from '#src/chart/data-providers/_lib/data-stream/time-window';
-import type { UseArgs } from '#src/vendor/shared-utils/type-utils/resolve-args';
+} from '../errors';
+import type { ChartLayoutFragmentData } from '../../schema/types';
+import type { TimeWindow } from './data-stream/time-window';
+import type { UseArgs } from '../../../vendor/shared-utils/type-utils/resolve-args';
 
 import {
   createDataProviderInvalidIdError,
@@ -30,7 +30,7 @@ import {
   createDataProviderNoNewDataError,
   createDataProviderUnknownStreamError,
   createDataStreamHasNoDataError,
-} from '#src/chart/data-providers/errors';
+} from '../errors';
 import { Maybe } from 'true-myth';
 import Result, { err, ok } from 'true-myth/result';
 

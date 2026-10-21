@@ -1,7 +1,7 @@
-import type { AppError } from '#src/vendor/shared-utils/errors/app-error';
-import type { PreconditionError } from '#src/vendor/shared-utils/errors/precondition-error';
+import type { AppError } from './app-error';
+import type { PreconditionError } from './precondition-error';
 
-import { PreconditionError as PreconditionErrorClass } from '#src/vendor/shared-utils/errors/precondition-error';
+import { PreconditionError as PreconditionErrorClass } from './precondition-error';
 
 /**
  * Generic builder error wrapper for static create() methods.

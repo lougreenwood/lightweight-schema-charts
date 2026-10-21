@@ -1,20 +1,20 @@
-import type { BaseChartDataSample } from '#src/chart/data-providers/_lib/data-stream/types';
-import type { AbstractDataStreamPresenterTArgs } from '#src/chart/data-stream-presenters/_lib/abstract-data-stream-presenter/types';
+import type { BaseChartDataSample } from '../../data-providers/_lib/data-stream/types';
+import type { AbstractDataStreamPresenterTArgs } from './abstract-data-stream-presenter/types';
 import type {
   ChartLayoutFragmentData,
   BaseStructuralDescriptor,
   SeriesPath,
-} from '#src/chart/schema/types';
-import type { SeriesAdapterInternalPoint } from '#src/chart/series-adapters/_lib/_adapter';
-import type { SeriesType } from '#src/chart/series-adapters/_lib/_registry/types';
+} from '../../schema/types';
+import type { SeriesAdapterInternalPoint } from '../../series-adapters/_lib/_adapter';
+import type { SeriesType } from '../../series-adapters/_lib/_registry/types';
 import type {
   GetArg,
   UseArgs,
-} from '#src/vendor/shared-utils/type-utils/resolve-args';
+} from '../../../vendor/shared-utils/type-utils/resolve-args';
 import type { Result } from 'true-myth/result';
 
 import { trackedMap } from '@ember/reactive/collections';
-import { humanizeChartFieldLabel } from '#src/chart/utils/labels';
+import { humanizeChartFieldLabel } from '../../utils/labels';
 
 /**
  * AbstractDataStreamPresenter

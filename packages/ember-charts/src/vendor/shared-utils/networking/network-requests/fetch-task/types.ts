@@ -1,4 +1,4 @@
-import type { HasLogger } from '#src/vendor/shared-utils/logger/types';
+import type { HasLogger } from '../../../logger/types';
 
 export type FetchTaskContext = HasLogger;
 

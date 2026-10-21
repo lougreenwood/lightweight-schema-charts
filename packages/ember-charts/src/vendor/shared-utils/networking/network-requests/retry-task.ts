@@ -1,8 +1,8 @@
-import type { HasLogger } from '#src/vendor/shared-utils/logger/types';
-import type { RetryTaskOptions } from '#src/vendor/shared-utils/networking/network-requests/retry-task/types';
+import type { HasLogger } from '../../logger/types';
+import type { RetryTaskOptions } from './retry-task/types';
 import type { Strategy } from 'true-myth/task/delay';
 
-import { duration } from '#src/vendor/shared-utils/duration';
+import { duration } from '../../duration';
 import {
   isRetryFailed,
   type RetryFailed,

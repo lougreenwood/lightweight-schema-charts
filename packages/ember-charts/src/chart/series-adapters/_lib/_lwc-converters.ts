@@ -19,7 +19,7 @@
 import type {
   ChartTimeSeriesPointNumber,
   ChartTimeSeriesPointOhlc,
-} from '#src/chart/series-adapters/_lib/_adapter';
+} from './_adapter';
 import type { CandlestickData, UTCTimestamp } from 'lightweight-charts';
 
 function sortTimeSeriesPointsAscending<TPoint extends { time: Date }>({

@@ -1,7 +1,7 @@
-import type { DataProviderLike } from '#src/chart/data-providers/_lib/data-provider-like';
-import type { DataStreamIdentifier } from '#src/chart/data-providers/_lib/data-stream/types';
-import type { HasConfigValues } from '#src/chart/data-stream-presenters/_lib/data-stream-presenter-like';
-import type { MakeTArgs } from '#src/vendor/shared-utils/type-utils/resolve-args';
+import type { DataProviderLike } from '../../../data-providers/_lib/data-provider-like';
+import type { DataStreamIdentifier } from '../../../data-providers/_lib/data-stream/types';
+import type { HasConfigValues } from '../data-stream-presenter-like';
+import type { MakeTArgs } from '../../../../vendor/shared-utils/type-utils/resolve-args';
 
 /**
  * TArgs for AbstractDataStreamPresenter.

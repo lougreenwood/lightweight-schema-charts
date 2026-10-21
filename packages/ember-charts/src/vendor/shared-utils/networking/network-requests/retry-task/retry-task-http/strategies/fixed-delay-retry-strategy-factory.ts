@@ -1,7 +1,7 @@
 import type {
   TaskRetryStrategyFactory,
   TaskRetryStrategyOptions,
-} from '#src/vendor/shared-utils/networking/network-requests/retry-task/retry-task-http/types';
+} from '../types';
 import type { Strategy } from 'true-myth/task/delay';
 
 import * as Delay from 'true-myth/task/delay';

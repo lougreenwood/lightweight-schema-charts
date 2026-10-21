@@ -1,4 +1,4 @@
-import type { DataStreamIdentifier } from '#src/chart/data-providers/_lib/data-stream/types';
+import type { DataStreamIdentifier } from '../data-providers/_lib/data-stream/types';
 import type {
   CompleteLeafStructuralDescriptor,
   BaseStructuralDescriptor,
@@ -6,7 +6,7 @@ import type {
   SeriesNode,
   SeriesPath,
   BranchStructuralDescriptor,
-} from '#src/chart/schema/types';
+} from './types';
 
 /**
  * Check if two DataStreamIdentifier objects are equal.

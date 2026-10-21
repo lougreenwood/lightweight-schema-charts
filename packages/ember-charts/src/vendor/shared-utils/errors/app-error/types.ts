@@ -1,7 +1,7 @@
 import type {
   HasLogger,
   LogSeverity,
-} from '#src/vendor/shared-utils/logger/types';
+} from '../../logger/types';
 
 export interface AppErrorArgs {
   errorCode: string;

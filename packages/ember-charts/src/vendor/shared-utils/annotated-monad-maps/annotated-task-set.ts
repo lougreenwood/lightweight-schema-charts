@@ -1,8 +1,8 @@
 import type {
   AnnotatedTaskSet,
   AnnotatedTaskSetOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-task-set/types';
-import type { AppError } from '#src/vendor/shared-utils/errors/app-error';
+} from './annotated-task-set/types';
+import type { AppError } from '../errors/app-error';
 import type { Task } from 'true-myth';
 
 import { all, resolve } from 'true-myth/task';
@@ -10,7 +10,7 @@ import { all, resolve } from 'true-myth/task';
 export type {
   AnnotatedTaskSet,
   AnnotatedTaskSetOpts,
-} from '#src/vendor/shared-utils/annotated-monad-maps/annotated-task-set/types';
+} from './annotated-task-set/types';
 
 /** Wraps pre-built entries into a ReadonlySet. */
 export function makeAnnotatedTaskSet<

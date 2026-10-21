@@ -1,10 +1,10 @@
-import type { AppError } from '#src/vendor/shared-utils/errors/app-error';
-import type { AbortableHttpError } from '#src/vendor/shared-utils/networking/network-requests/fetch-task/errors';
-import type { RetryTaskHttpOptions } from '#src/vendor/shared-utils/networking/network-requests/retry-task/retry-task-http/types';
+import type { AppError } from '../../errors/app-error';
+import type { AbortableHttpError } from './fetch-task/errors';
+import type { RetryTaskHttpOptions } from './retry-task/retry-task-http/types';
 import type { Maybe, Task } from 'true-myth';
 
-import { retryTask } from '#src/vendor/shared-utils/networking/network-requests/retry-task';
-import { exponentialBackoffRetryStrategyFactory } from '#src/vendor/shared-utils/networking/network-requests/retry-task/retry-task-http/strategies/exponential-backoff-retry-strategy-factory';
+import { retryTask } from './retry-task';
+import { exponentialBackoffRetryStrategyFactory } from './retry-task/retry-task-http/strategies/exponential-backoff-retry-strategy-factory';
 import { just, nothing } from 'true-myth/maybe';
 
 export function isHttpErrorRetryable(error: AppError): Maybe<boolean> {

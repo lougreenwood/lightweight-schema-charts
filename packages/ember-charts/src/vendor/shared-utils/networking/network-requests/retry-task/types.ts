@@ -1,4 +1,4 @@
-import type { HasLogger } from '#src/vendor/shared-utils/logger/types';
+import type { HasLogger } from '../../../logger/types';
 import type { Task } from 'true-myth';
 import type { Strategy } from 'true-myth/task/delay';
 

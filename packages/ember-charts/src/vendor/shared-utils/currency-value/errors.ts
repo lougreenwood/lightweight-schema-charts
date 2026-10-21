@@ -1,5 +1,5 @@
-import type { NotFoundError } from '#src/vendor/shared-utils/errors/not-found-error';
-import type { ValidationError } from '#src/vendor/shared-utils/errors/validation-error';
+import type { NotFoundError } from '../errors/not-found-error';
+import type { ValidationError } from '../errors/validation-error';
 
 /**
  * Returned by `CurrencyValue.resolveFromEmbedded()` when none of the candidate assets match the embedded `assetId`.

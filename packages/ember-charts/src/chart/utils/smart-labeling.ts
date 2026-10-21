@@ -1,6 +1,6 @@
-import type { BaseStructuralDescriptor } from '#src/chart/schema/types';
+import type { BaseStructuralDescriptor } from '../schema/types';
 
-import { isBranchStructuralDescriptor } from '#src/chart/schema/utils';
+import { isBranchStructuralDescriptor } from '../schema/utils';
 
 /**
  * Label part representing a selected item with optional structural prefix.

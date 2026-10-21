@@ -1,4 +1,5 @@
 import { babel } from '@rollup/plugin-babel';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { Addon } from '@embroider/addon-dev/rollup';
 import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
@@ -17,6 +18,8 @@ export default {
   output: addon.output(),
 
   plugins: [
+    nodeResolve({ extensions: ['.mjs', '.js', '.json', '.ts', '.gts'] }),
+
     // These are the modules that users should be able to import from your
     // addon. Anything not listed here may get optimized away.
     // By default all your JavaScript modules (**/*.js) will be importable.

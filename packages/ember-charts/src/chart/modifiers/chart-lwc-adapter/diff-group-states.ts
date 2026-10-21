@@ -15,8 +15,8 @@
 import type {
   GroupDiff,
   GroupSnapshot,
-} from '#src/chart/modifiers/chart-lwc-adapter/types';
-import type { GroupId, SeriesGroupState } from '#src/chart/schema/types';
+} from './types';
+import type { GroupId, SeriesGroupState } from '../../schema/types';
 
 /**
  * Capture a GroupSnapshot from a SeriesGroupState for use in the next diff cycle.

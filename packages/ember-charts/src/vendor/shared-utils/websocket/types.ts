@@ -8,11 +8,11 @@
  * ConnectionState, Subscription, WebSocketStats) live alongside the backend connection manager.
  */
 
-import type { JsonApiSuccessDocument } from '#src/vendor/shared-utils/json-api/types';
+import type { JsonApiSuccessDocument } from '../json-api/types';
 import type {
   SerializedAppError,
   SerializedResult,
-} from '#src/vendor/shared-utils/errors/serialized-app-error';
+} from '../errors/serialized-app-error';
 import type { LiteralUnion } from 'type-fest';
 
 export type { LiteralUnion };

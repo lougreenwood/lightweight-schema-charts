@@ -13,17 +13,17 @@
  *   options }), backfill({ api, data }), update({ api, data }) }
  */
 
-import type { SeriesAdapterLike } from '#src/chart/series-adapters/_lib/_adapter';
-import type { NoSeriesAdapterForTypeError } from '#src/chart/series-adapters/_lib/_registry/errors';
-import type { SeriesType } from '#src/chart/series-adapters/_lib/_registry/types';
+import type { SeriesAdapterLike } from './_adapter';
+import type { NoSeriesAdapterForTypeError } from './_registry/errors';
+import type { SeriesType } from './_registry/types';
 
-import { createNoSeriesAdapterForTypeError } from '#src/chart/series-adapters/_lib/_registry/errors';
-import { areaAdapter } from '#src/chart/series-adapters/area';
-import { barAdapter } from '#src/chart/series-adapters/bar';
-import { baselineAdapter } from '#src/chart/series-adapters/baseline';
-import { candlestickAdapter } from '#src/chart/series-adapters/candle-stick';
-import { histogramAdapter } from '#src/chart/series-adapters/histogram';
-import { lineAdapter } from '#src/chart/series-adapters/line';
+import { createNoSeriesAdapterForTypeError } from './_registry/errors';
+import { areaAdapter } from '../area';
+import { barAdapter } from '../bar';
+import { baselineAdapter } from '../baseline';
+import { candlestickAdapter } from '../candle-stick';
+import { histogramAdapter } from '../histogram';
+import { lineAdapter } from '../line';
 import Result, { err, ok } from 'true-myth/result';
 
 export const adapters = [

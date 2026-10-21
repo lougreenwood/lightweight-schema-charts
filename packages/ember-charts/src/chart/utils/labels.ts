@@ -11,13 +11,13 @@
  * - BuildPaneLabel: Generate pane label with special handling for first pane
  */
 
-import type { DataStreamIdentifier } from '#src/chart/data-providers/_lib/data-stream/types';
+import type { DataStreamIdentifier } from '../data-providers/_lib/data-stream/types';
 import type {
   BaseStructuralDescriptor,
   SeriesPath,
-} from '#src/chart/schema/types';
+} from '../schema/types';
 
-import { isBranchStructuralDescriptor } from '#src/chart/schema/utils';
+import { isBranchStructuralDescriptor } from '../schema/utils';
 import startCase from 'lodash-es/startCase';
 
 /**

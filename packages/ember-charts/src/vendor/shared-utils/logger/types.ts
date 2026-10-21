@@ -1,4 +1,4 @@
-import type { AppLogger } from '../../../r/shared-utils/logger/logger.js';
+import type { AppLogger } from './logger';
 
 /**
  * Class-like instance type with a constructor that has a stable, string literal name.

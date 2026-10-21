@@ -1,14 +1,14 @@
 import type {
   ChartTimeSeriesPointOhlc,
   SeriesAdapterWithDescriptor,
-} from '#src/chart/series-adapters/_lib/_adapter';
+} from './_lib/_adapter';
 
-import { translateOptionsToLwc } from '#src/chart/series-adapters/_lib/_adapter';
+import { translateOptionsToLwc } from './_lib/_adapter';
 import {
   mapOhlcSetToCandles,
   ohlcPointToLwc,
   sortOhlcPointsAscending,
-} from '#src/chart/series-adapters/_lib/_lwc-converters';
+} from './_lib/_lwc-converters';
 import { BarSeries } from 'lightweight-charts';
 
 export type BarPoint = ChartTimeSeriesPointOhlc;

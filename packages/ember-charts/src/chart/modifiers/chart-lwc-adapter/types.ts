@@ -11,13 +11,13 @@
  * GroupDiff for per-group change descriptions. The adapter only stores LWC DOM handles — no change detection fields.
  */
 
-import type { AnchoredPanePrimitive } from '#src/chart/chart-ui/primitives/anchored-text';
-import type { DataProviderCursor } from '#src/chart/data-providers/_lib/data-stream/types';
-import type { GroupId, SeriesPath } from '#src/chart/schema/types';
+import type { AnchoredPanePrimitive } from '../../chart-ui/primitives/anchored-text';
+import type { DataProviderCursor } from '../../data-providers/_lib/data-stream/types';
+import type { GroupId, SeriesPath } from '../../schema/types';
 import type {
   SeriesAdapterLike,
   SeriesApiLike,
-} from '#src/chart/series-adapters/_lib/_adapter';
+} from '../../series-adapters/_lib/_adapter';
 import type { IPaneApi, Time } from 'lightweight-charts';
 
 /**
