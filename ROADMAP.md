@@ -41,11 +41,38 @@ Engineering debt is listed with enough detail to act on. Product direction is li
 
 ## Planned expansion
 
-The following categories are intentionally unspecified. They will be mined from the project's chart documentation, design notes, and deferred work during the documentation-context extraction.
+Mined from the project's chart and data-stream documentation during the documentation-context extraction. Items are generalised: the shape is preserved, the originating domain is not.
 
-- Generalization beyond the first consumer: plugin-based value and data-structure support, framework bindings, and a stable public contract.
-- Full-featured charting: annotations and overlays, drawing and primitives, multi-pane composition, axis and scale behaviour, crosshair and legend interaction, range and zoom policy.
-- Declarative controls and layout: timeframes, series selection, indicator configuration, saved layouts, and their persistence model.
-- Data and streaming: incremental backfill, cancellation, reconnection, and stale-data policy.
-- Theme and presentation: theme discovery, injected design tokens, and the separation of presentation policy from the package.
-- Delivery: packaging, examples, release process, and long-term support expectations.
+### Data model
+
+- **Discrete event streams.** Sparse, ordered events with arbitrary gaps, rendered as markers or bands rather than connected series. The current stream model assumes density; this needs a distinct series kind and a projection contract that tolerates absence.
+- **Multi-resolution streams.** One logical stream exposing several embedded window sizes behind a single identity, instead of one stream instance per interval.
+- **Stream projection facade.** A single handle for a logical stream that stays stable while its underlying interval or configuration changes, so consumers do not re-resolve providers when a control changes.
+- **Backfill for late streams.** A stream added after processing has started must be able to request history and signal readiness, rather than appearing empty indefinitely.
+
+### Composition
+
+- **Provider composition.** Group providers that describe one logical source, so a pane can be assembled from several providers without flattening them first.
+- **Dependency-aware invalidation.** When one stream is derived from another, a change in the source should rebuild dependents in order, without the consumer coordinating that manually.
+- **Derived-stream computation.** A reusable compute abstraction for streams whose values are calculated from other streams, separating computation from view state and error handling.
+
+### Interaction and controls
+
+- **Declarative controls.** Visibility, timeframe, series selection, and configuration surfaces expressed as declared state, so a host renders its own controls without the chart owning them.
+- **Annotation and overlay layer.** User and system annotations attached to time or price, rendered above series and surviving data updates.
+- **Range and zoom policy.** A declared policy for initial focus, preservation across updates, and behaviour when the data window changes.
+
+### Platform
+
+- **Framework-neutral core.** Extract the renderer from the host package and prove it without a framework binding.
+- **Additional bindings.** Each host consumes the same core contracts and owns only its scheduling and element lifecycle.
+- **Value conversion seam.** Consumer-registered handlers replace the remaining internal value types, so the package carries no currency or other domain conversion.
+
+### Explicitly not in scope
+
+These are consumer concerns that appeared in the source material and do not belong in the library:
+
+- Ingestion, repair, and reconciliation of upstream data.
+- Persistence of layouts and user preferences; the package accepts and returns an overlay.
+- Authentication, subscriptions, and transport.
+- Backend coordination and job orchestration.
