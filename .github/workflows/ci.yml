@@ -17,23 +17,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install tooling
+        uses: ./.github/actions/install-tooling
+
       - name: Build the development container
         run: docker compose build dev
 
       - name: Install dependencies
-        run: docker compose run --rm -T dev pnpm install --frozen-lockfile
+        run: mise run install:ci
 
       - name: Build
-        run: docker compose run --rm -T dev pnpm -r --if-present build
+        run: mise run build
 
       - name: Lint
-        run: docker compose run --rm -T dev pnpm -r --if-present lint
+        run: mise run lint
 
       - name: Typecheck
-        run: docker compose run --rm -T dev pnpm -r --if-present typecheck
+        run: mise run typecheck
 
       - name: Test
-        run: docker compose run --rm -T dev pnpm -r --if-present test
+        run: mise run test
 
       - name: Format check
-        run: docker compose run --rm -T dev pnpm exec prettier . --check
+        run: mise run format:check

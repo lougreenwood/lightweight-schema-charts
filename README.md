@@ -10,7 +10,7 @@ The Ember package renders a working chart and is covered by an acceptance test t
 
 ![A candlestick chart rendered from synthetic data](docs/assets/chart.png)
 
-*120 synthetic candles rendered as a candlestick series in a single pane. The title is composed from the instrument, provider, stream, and field; the price scale and crosshair are Lightweight Charts.*
+_120 synthetic candles rendered as a candlestick series in a single pane. The title is composed from the instrument, provider, stream, and field; the price scale and crosshair are Lightweight Charts._
 
 Two things are deliberately incomplete. The framework-neutral core is a placeholder, and the renderer currently lives entirely in the Ember package. The repository is moving toward the dependency direction below rather than claiming it today.
 
@@ -89,6 +89,16 @@ mise run test
 ```
 
 Run `mise run container:shell` to open a shell inside the container, then use package-local `pnpm` commands.
+
+### Git hooks and CI
+
+`mise run install` installs a pre-commit hook that formats staged files inside the container. To install or refresh it on its own:
+
+```sh
+mise run hooks:install
+```
+
+`.github/workflows/ci.yml` builds the development container and runs install, build, lint, typecheck, tests, and a format check on every push and pull request.
 
 Every workspace package with its own dependencies needs a `node_modules` named volume in `compose.yaml`. The root volume is not enough for pnpm's package-local links.
 

@@ -9,8 +9,8 @@ depends = ["hooks:install"]
 run = "scripts/run-in-container.sh pnpm install"
 
 [tasks."hooks:install"]
-description = "Install the git pre-commit hook"
-run = "lefthook install"
+description = "Install the git pre-commit hook when this is a Git checkout"
+run = "if [ -d .git ]; then lefthook install; fi"
 
 [tasks."install:ci"]
 description = "Install dependencies with the lockfile enforced"
