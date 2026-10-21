@@ -3,6 +3,7 @@ export { createReactiveChartSchema } from './chart/schema/create-reactive-chart-
 export { ReactiveChartSchema } from './chart/schema/schema-reactive';
 export { ChartLayout } from './chart/schema/chart-layout';
 export { AbstractDataProvider } from './chart/data-providers/_lib/abstract-data-provider';
+export { validateDataProviderIdentifier } from './chart/data-providers/_lib/abstract-data-provider';
 export { AbstractDataStreamPresenter } from './chart/data-stream-presenters/_lib/abstract-data-stream-presenter';
 export { SeriesAdapterRegistry, adapters, } from './chart/series-adapters/_lib/_registry';
 export { default as ChartLwcAdapterModifier } from './chart/modifiers/chart-lwc-adapter';
