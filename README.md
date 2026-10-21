@@ -100,7 +100,8 @@ See [ROADMAP.md](ROADMAP.md) for the engineering work behind these limitations a
 ## Documentation
 
 - [Architecture overview](docs/architecture/overview.md)
-- [Decision 0001: first milestone scope](docs/decisions/0001-first-milestone-scope.md)
+- [Decisions](docs/decisions/README.md)
+- [Guides](docs/guides/README.md)
 
 ## License
 
