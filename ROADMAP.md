@@ -37,7 +37,6 @@ Engineering debt is listed with enough detail to act on. Product direction is li
 - **Add CI.** Install, build, lint, typecheck, test, and format on every change.
 - **Broaden the test matrix.** Adapters, reconciliation cases, multi-pane layouts, removal, and failure paths.
 - **Documentation site.** Synthetic data only, covering core and Ember usage.
-- **Licensing.** Select a license before any distribution.
 
 ## Planned expansion
 

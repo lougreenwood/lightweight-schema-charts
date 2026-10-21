@@ -109,4 +109,4 @@ See [ROADMAP.md](ROADMAP.md) for the engineering work behind these limitations a
 
 ## License
 
-Not yet selected. Do not publish or redistribute this repository until licensing is settled.
+MIT. See [LICENSE](LICENSE).

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Lightweight Schema Charts Ember test application.",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "exports": {
     "./tests/*": "./tests/*",
     "./*": "./app/*"

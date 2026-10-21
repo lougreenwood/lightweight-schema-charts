@@ -7,7 +7,7 @@
     "ember-addon"
   ],
   "repository": "",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "author": "",
   "imports": {
     "#src/*": "./src/*"
