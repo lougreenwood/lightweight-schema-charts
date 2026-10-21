@@ -1,7 +1,7 @@
 node_modules/
 .pnpm-store/
-dist/
-declarations/
+/test-app/dist/
+/packages/charts/dist/
 dist-tests/
 target/
 

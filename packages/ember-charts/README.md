@@ -79,6 +79,8 @@ Package-local commands run through `pnpm --filter @lightweight-schema-charts/emb
 
 `prepare` and `prepack` run the full build. For pnpm Git dependencies, select `#<commit>&path:/packages/ember-charts`; selecting the repository root installs the workspace package, not this addon. The consumer must explicitly allow the Git dependency's build scripts. A packed-artifact check and a Git-install check are separate proofs.
 
+pnpm resolves a GitHub specifier to a repository tarball rather than a Git clone, so its `prepare` script is not run. The addon therefore commits `dist/` and `declarations/` so a pinned GitHub dependency is consumable. Rebuild and commit them whenever source changes; CI should verify they are current.
+
 ## Roadmap
 
 See [ROADMAP.md](../../ROADMAP.md).
