@@ -20,6 +20,91 @@ Engineering debt is listed with enough detail to act on. Product direction is li
 - **Verify committed build output.** Add a CI check that rebuilding leaves `dist/` and `declarations/` unchanged, so the pinned tarball cannot silently drift from source.
 - **Finish the vendored-support decoupling.** The vendored currency file still ships even though the value-handler seam exists; error constructors and the logger remain copies. Replace them with package-local support or an injected diagnostics port.
 - **Prove the provider create-error path.** The fixture returns `never` for create failures. Use a real error type so the public base's consumer-visible failure branch is exercised.
+- **Prefer factories over abstract bases.** The provider and presenter contracts are structural, so the shipped abstract classes are an implementation choice, not part of the public shape. Evaluate factory functions that close over explicit state — or a small state object plus pure helpers — as the primary construction API once consumer registrations stabilize. Nice-to-have; not a cutover blocker. See the construction example below.
+
+### Construction API: factories instead of base classes
+
+Today a provider must extend a class, declare its own static type, and satisfy abstract members:
+
+```ts
+export class MarketDataDataProvider extends AbstractDataProvider<
+  typeof MarketDataDataProvider,
+  DataProviderInstanceContext
+> {
+  protected readonly staticSide = MarketDataDataProvider;
+  static readonly dataSampleSource = Object;
+  static readonly dataStreamIdentifiers = new Set([...]);
+
+  static create({ context, identifier }) { ... }
+  static discoverIdentifiers(context) { ... }
+  static getDataSource({ context }) { ... }
+
+  protected _dataSampleSourceAdapter({ dataSampleSource }) { ... }
+  protected _dataSampleSourceRecordsSince({ sinceDate }) { ... }
+}
+```
+
+A factory returns the same structural contract without inheritance, statics, or protected members:
+
+```ts
+export function createMarketDataDataProvider({
+  dataSource,
+  identifier,
+  context,
+}: {
+  dataSource: MarketDataDataStreamModel;
+  identifier: MarketDataIdentifier;
+  context: DataProviderInstanceContext;
+}): DataProviderLike {
+  // Shared behavior comes from pure helpers or a small state record.
+  const state = createProviderState();
+  const staticSide = { dataSampleSource: Object, dataStreamIdentifiers: new Set([...]) };
+
+  return {
+    dataSource,
+    defaultLayout: defaultLayoutFor(staticSide, identifier),
+    identifier,
+    name: dataSource.name,
+    stableLayoutKey: identifier.id,
+    dataStreamIdentifiers: staticSide.dataStreamIdentifiers,
+    getCursor: ({ dataStreamIdentifier }) => getProviderCursor({ state, dataStreamIdentifier }),
+    getDataSince: ({ cursor, dataStreamIdentifier }) =>
+      fetchProviderSamples({ state, staticSide, dataSource, cursor, dataStreamIdentifier }),
+    getDataState: ({ dataStreamIdentifier }) => deriveDataState({ dataSource, dataStreamIdentifier }),
+    groupIdFor: ({ dataStreamIdentifier }) => `${identifier.id}::${dataStreamIdentifier.type}`,
+  };
+}
+```
+
+The shared pieces currently living in the base become named functions or a small state object:
+
+```ts
+export function createProviderState() {
+  return { cursorByStream: new Map<string, DataProviderCursor>() };
+}
+
+export function fetchProviderSamples({ state, staticSide, dataSource, cursor, dataStreamIdentifier }) {
+  // validate stream, map records to samples, finalize the batch, advance the cursor
+}
+```
+
+Presenters follow the same shape: a factory closes over the tracked descriptor map and returns `describeFields`, `projectField`, `getStreamDataSource`, and the layout fields directly, instead of subclassing and implementing protected hooks.
+
+Benefits:
+
+- **No inheritance surface.** Nothing is protected, abstract, or overridden; the contract is satisfied structurally, which is what consumers already depend on.
+- **Explicit dependencies.** Everything a provider needs arrives in its arguments, instead of being reached through `this`, `super`, or static members.
+- **Smaller state.** Only the cursor map and whatever the closure captures; no class instance, no `staticSide`, no static-type gymnastics.
+- **Easier tests.** Call the factory with fakes and assert on the returned functions; no subclass to construct, no abstract members to stub.
+- **Composition over inheritance.** Multiple variants compose helpers instead of forming a class hierarchy, matching the project's direction.
+- **Avoids the static-side problem.** The concrete class type no longer needs to be threaded through a generic to type static members.
+
+Costs and constraints:
+
+- The shared behavior in both bases — cursor storage, batch finalization, descriptor caching, default field selection, projection orchestration — must be extracted into functions before any class can be replaced.
+- The presenter base uses `trackedMap` for descriptor caching; the closure must preserve that reactivity exactly, or empty-to-populated updates regress.
+- It touches every provider and presenter, including the five indicator presenters, so it needs its own test pass.
+- It is post-cutover work. Do not reshape construction while the application is still moving onto the package.
 - **Document the plugin boundary.** Provider and presenter are the only integration surface. Make that explicit in the architecture overview, with the reference adapter as the example.
 
 ## Core extraction
