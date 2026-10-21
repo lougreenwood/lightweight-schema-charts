@@ -1,9 +1,6 @@
 import type { Maybe } from 'true-myth';
 
-import type {
-  AnnotatedMaybeMap,
-  AnnotatedMaybeMapOpts,
-} from './annotated-maybe-map/types';
+import type { AnnotatedMaybeMap } from './annotated-maybe-map/types';
 
 export type {
   AnnotatedMaybeMap,

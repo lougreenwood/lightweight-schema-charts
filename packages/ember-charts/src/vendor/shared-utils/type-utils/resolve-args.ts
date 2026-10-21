@@ -135,7 +135,7 @@ export type PickArgs<
 /**
  * Brand marker for all TArgs shapes (brand key is required by design).
  */
-export type TArgsBrand<TOriginal = unknown> = {
+export type TArgsBrand<TOriginal> = {
   readonly [__tArgsConstraintBrand]: 'TArgsConstraint';
   readonly [__tArgsOriginalConstraint]: TOriginal;
 };

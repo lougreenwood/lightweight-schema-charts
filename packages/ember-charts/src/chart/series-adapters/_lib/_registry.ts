@@ -16,9 +16,15 @@
 import type { SeriesAdapterLike } from './_adapter';
 import type { NoSeriesAdapterForTypeError } from './_registry/errors';
 import type { SeriesType } from './_registry/types';
-import type { SeriesValueHandler, SeriesValueHandlers } from './value-handler';
+import type {
+  SeriesValueHandler,
+  SeriesValueHandlers,
+} from './value-handler/types';
+import type { SeriesValueHandlerNotFoundError } from './value-handler/errors';
 
 import { createNoSeriesAdapterForTypeError } from './_registry/errors';
+import { numericSeriesValueHandler } from './value-handler';
+import { NotFoundError } from '../../../vendor/shared-utils/errors/not-found-error';
 import { areaAdapter } from '../area';
 import { barAdapter } from '../bar';
 import { baselineAdapter } from '../baseline';
@@ -40,17 +46,38 @@ export const adapters = [
  * SeriesAdapterRegistry encapsulates adapter lookup state and APIs.
  */
 export class SeriesAdapterRegistry {
-  constructor(
-    items: ReadonlyArray<(typeof adapters)[number]> = adapters,
-    valueHandlers: SeriesValueHandlers = {},
-  ) {
+  constructor({
+    items = adapters,
+    valueHandlers = [],
+  }: {
+    items?: ReadonlyArray<(typeof adapters)[number]>;
+    valueHandlers?: SeriesValueHandlers;
+  } = {}) {
     this.#map = new Map(items.map((adapter) => [adapter.id, adapter] as const));
-    this.#valueHandlers = new Map(Object.entries(valueHandlers));
+    this.#valueHandlers = new Map(
+      [numericSeriesValueHandler, ...valueHandlers].map(
+        (handler) => [handler.id, handler] as const,
+      ),
+    );
   }
 
   /** Resolve a value handler by the identifier a descriptor names. */
-  getValueHandler(id: string | undefined): SeriesValueHandler | undefined {
-    return id === undefined ? undefined : this.#valueHandlers.get(id);
+  getValueHandler({
+    id,
+  }: {
+    id?: string;
+  }): Result<SeriesValueHandler, SeriesValueHandlerNotFoundError> {
+    const handlerId = id ?? numericSeriesValueHandler.id;
+    const handler = this.#valueHandlers.get(handlerId);
+    if (handler !== undefined) return ok(handler);
+    return err(
+      NotFoundError.of({
+        errorCode: 'SERIES_VALUE_HANDLER_NOT_FOUND',
+        message: 'The series names an unregistered value handler.',
+        meta: { handlerId },
+        emitLog: false,
+      }),
+    );
   }
 
   /**

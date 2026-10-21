@@ -1,3 +1,4 @@
+import type { AppErrorArgs } from './app-error';
 import type { AppError } from './app-error';
 import type { PreconditionError } from './precondition-error';
 
@@ -53,28 +54,24 @@ import { PreconditionError as PreconditionErrorClass } from './precondition-erro
  * ```;
  * ```
  *
- * @template TArgsInput - Partial override of BuilderPreconditionErrorArgs @template _TArgs - Merged args (defaults +
- * overrides)
+ * @template TErrorArgs - Fully resolved builder error arguments
  */
 export type BuilderPreconditionError<
-  TArgsInput extends Partial<BuilderPreconditionErrorArgs> =
-    Partial<BuilderPreconditionErrorArgs>,
-  _TArgs extends BuilderPreconditionErrorArgs = BuilderPreconditionErrorArgs &
-    TArgsInput,
+  TErrorArgs extends BuilderPreconditionErrorArgs,
 > = PreconditionError<{
-  errorCode: _TArgs['errorCode'];
+  errorCode: TErrorArgs['errorCode'];
   errorGroup: 'builder_precondition';
-  message: _TArgs['message'];
-  meta: _TArgs['meta'];
+  message: TErrorArgs['message'];
+  meta: TErrorArgs['meta'];
 }> & {
-  cause: _TArgs['cause'];
+  cause: TErrorArgs['cause'];
 };
 
 /**
  * Base arguments for BuilderPreconditionError.
  */
 export interface BuilderPreconditionErrorArgs {
-  cause: AppError;
+  cause: AppError<AppErrorArgs>;
   errorCode: string;
   message: string;
   meta: object | undefined;
@@ -104,8 +101,8 @@ export interface BuilderPreconditionErrorArgs {
  */
 export function createBuilderError<
   const TErrorCode extends string,
-  const TCause extends AppError,
-  const TMeta extends object | undefined = undefined,
+  const TCause extends AppError<AppErrorArgs>,
+  const TMeta extends object | undefined,
 >({
   cause,
   errorCode,

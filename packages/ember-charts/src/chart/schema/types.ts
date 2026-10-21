@@ -19,7 +19,7 @@ import type { IPaneApi, Time } from 'lightweight-charts';
  * @template TDataStreamId - The specific DataStreamIdentifier type for type preservation through the chain.
  */
 export type BaseStructuralDescriptor<
-  TDataStreamId extends DataStreamIdentifier = DataStreamIdentifier,
+  TDataStreamId extends DataStreamIdentifier,
 > =
   | BranchStructuralDescriptor<TDataStreamId>
   | LeafStructuralDescriptor<TDataStreamId>;
@@ -44,7 +44,7 @@ export type BaseStructuralDescriptor<
  * @template TDataStreamId - The specific DataStreamIdentifier type for type preservation through the chain.
  */
 export type BranchStructuralDescriptor<
-  TDataStreamId extends DataStreamIdentifier = DataStreamIdentifier,
+  TDataStreamId extends DataStreamIdentifier,
 > = BaseFieldDescriptor<TDataStreamId> &
   Readonly<{
     children: ReadonlySet<BaseStructuralDescriptor<TDataStreamId>>;
@@ -108,7 +108,7 @@ export type ChartState = Readonly<{
  * @template TDataStreamId - The specific DataStreamIdentifier type for type preservation through the chain.
  */
 export type CompleteLeafStructuralDescriptor<
-  TDataStreamId extends DataStreamIdentifier = DataStreamIdentifier,
+  TDataStreamId extends DataStreamIdentifier,
 > = BaseFieldDescriptor<TDataStreamId> &
   Readonly<{
     kind: 'series';
@@ -257,7 +257,7 @@ export type PaneState = Readonly<{
  * @template TDataStreamId - The specific DataStreamIdentifier type for type preservation through the chain.
  */
 export type PartialLeafStructuralDescriptor<
-  TDataStreamId extends DataStreamIdentifier = DataStreamIdentifier,
+  TDataStreamId extends DataStreamIdentifier,
 > = BaseFieldDescriptor<TDataStreamId> &
   Readonly<{
     kind: 'series';
@@ -344,31 +344,14 @@ export type SeriesGroupLayout = Readonly<{
  *
  * Represents a series group with its associated data stream and presenter. One group per data stream.
  *
- * @template TA - Override shape for provider type narrowing. When a specific provider type is provided (e.g.,
- *   `SeriesGroupNode<{ providerType: 'ticker' }>`), the `dataStreamIdentifier` and `presenter` properties are narrowed
- *   to the concrete types for that provider. When no type is specified (default), base types are used to allow
- *   assignment from any provider.
+ * Runtime storage uses the provider and presenter contracts rather than a registration-derived type.
  */
-export type SeriesGroupNode<
-  TA extends SeriesGroupNodeTArgs = SeriesGroupNodeTArgs,
-> = Readonly<{
-  dataStreamIdentifier: SeriesGroupNodeDataStreamIdentifier<TA>;
+export type SeriesGroupNode = Readonly<{
+  dataStreamIdentifier: DataStreamIdentifier;
   id: GroupId;
-  presenter: SeriesGroupNodePresenter<TA>;
+  presenter: DataStreamPresenterLike<DataProviderLike, DataStreamIdentifier>;
   series: Map<SeriesPath, SeriesNode>;
 }>;
-
-/**
- * Constraint for SeriesGroupNode type parameter.
- *
- * This is a simple object constraint (not a branded TArgs) because callers pass plain object overrides like `{
- * providerType: 'indicator-provider' }`. The helper types `SeriesGroupNodeDataStreamIdentifier` and
- * `SeriesGroupNodePresenter` use conditional types to narrow or fall back to base types based on whether a specific
- * providerType is provided.
- */
-export type SeriesGroupNodeTArgs = {
-  providerType?: string;
-};
 
 /**
  * SeriesGroupState
@@ -380,7 +363,7 @@ export type SeriesGroupState = Readonly<{
   dataState: PerStreamDataState;
   dataStreamIdentifier: DataStreamIdentifier;
   groupId: GroupId;
-  presenter: DataStreamPresenterLike;
+  presenter: DataStreamPresenterLike<DataProviderLike, DataStreamIdentifier>;
   priceScale?: PriceScaleLayout;
   provider: DataProviderLike;
   series: ReadonlyArray<SeriesState>;
@@ -412,12 +395,11 @@ export type SeriesId = string;
  * @template TDataStreamId - The specific DataStreamIdentifier type. When narrowed (e.g., to
  *   IndicatorProviderDataStreamIdentifier), preserves type information through the descriptor chain.
  */
-export type SeriesIdentifier<
-  TDataStreamId extends DataStreamIdentifier = DataStreamIdentifier,
-> = Readonly<{
-  dataStreamIdentifier: TDataStreamId;
-  fieldPath: SeriesPath;
-}>;
+export type SeriesIdentifier<TDataStreamId extends DataStreamIdentifier> =
+  Readonly<{
+    dataStreamIdentifier: TDataStreamId;
+    fieldPath: SeriesPath;
+  }>;
 
 /**
  * SeriesLayout
@@ -470,12 +452,11 @@ export type StructuralGroupType = 'composite' | 'faceted';
  *
  * @template TDataStreamId - The specific DataStreamIdentifier type for type preservation through the chain.
  */
-type BaseFieldDescriptor<
-  TDataStreamId extends DataStreamIdentifier = DataStreamIdentifier,
-> = Readonly<{
-  identifier: SeriesIdentifier<TDataStreamId>;
-  label: string;
-}>;
+type BaseFieldDescriptor<TDataStreamId extends DataStreamIdentifier> =
+  Readonly<{
+    identifier: SeriesIdentifier<TDataStreamId>;
+    label: string;
+  }>;
 
 /**
  * LeafStructuralDescriptor
@@ -484,27 +465,9 @@ type BaseFieldDescriptor<
  *
  * @template TDataStreamId - The specific DataStreamIdentifier type for type preservation through the chain.
  */
-type LeafStructuralDescriptor<
-  TDataStreamId extends DataStreamIdentifier = DataStreamIdentifier,
-> =
+type LeafStructuralDescriptor<TDataStreamId extends DataStreamIdentifier> =
   | CompleteLeafStructuralDescriptor<TDataStreamId>
   | PartialLeafStructuralDescriptor<TDataStreamId>;
-
-/**
- * Helper type for SeriesGroupNode's dataStreamIdentifier property.
- *
- * When TA specifies a providerType, returns the narrowed DataStreamIdentifierFor type. When TA is the default (no
- * specific providerType), returns the base DataStreamIdentifier type.
- */
-type SeriesGroupNodeDataStreamIdentifier<TA> = DataStreamIdentifier;
-
-/**
- * Helper type for SeriesGroupNode's presenter property.
- *
- * When TA specifies a providerType, returns the narrowed PresenterFor type. When TA is the default (no specific
- * providerType), returns the base DataStreamPresenterLike type.
- */
-type SeriesGroupNodePresenter<TA> = DataStreamPresenterLike;
 
 /**
  * SeriesType

@@ -1,6 +1,8 @@
+import type { AppError } from '../../../vendor/shared-utils/errors/app-error';
+import type { AppErrorArgs } from '../../../vendor/shared-utils/errors/app-error';
 import type {
-  AbstractDataProviderTArgs,
   DataProviderIdentifier,
+  DataProviderStatic,
   InferDataProviderIdentifier,
   InferDataSource,
 } from './abstract-data-provider/types';
@@ -21,7 +23,6 @@ import type {
 } from '../errors';
 import type { ChartLayoutFragmentData } from '../../schema/types';
 import type { TimeWindow } from './data-stream/time-window';
-import type { UseArgs } from '../../../vendor/shared-utils/type-utils/resolve-args';
 
 import {
   createDataProviderInvalidIdError,
@@ -52,17 +53,20 @@ import Result, { err, ok } from 'true-myth/result';
  *   - Market data provider: one UUID (accepted default)
  *   - Other providers: derive ids from the data source sample identity.
  *
- * Uses TArgs V2 pattern for generic constraints.
+ * The static-side type preserves the consumer's source and identity types.
  */
 export abstract class AbstractDataProvider<
-  TA extends AbstractDataProviderTArgs = AbstractDataProviderTArgs,
+  TDataProviderStatic extends DataProviderStatic<
+    unknown,
+    AppError<AppErrorArgs>,
+    TContext
+  >,
+  TContext extends object,
 > implements DataProviderLike {
   /**
    * Concrete provider identity for this instance (derived from static's discoverIdentifiers).
    */
-  readonly identifier: InferDataProviderIdentifier<
-    UseArgs<TA>['dataProviderStatic']
-  >;
+  readonly identifier: InferDataProviderIdentifier<TDataProviderStatic>;
 
   /**
    * Human-readable name for this provider instance (the subclasses should set this, e.g., "MarketDataData").
@@ -72,7 +76,7 @@ export abstract class AbstractDataProvider<
   /**
    * Public accessor for the data source (e.g., IndicatorGroupViewModel, MarketDataDataStreamModel).
    */
-  get dataSource(): InferDataSource<UseArgs<TA>['dataProviderStatic']> {
+  get dataSource(): InferDataSource<TDataProviderStatic> {
     return this._dataSource;
   }
 
@@ -82,7 +86,7 @@ export abstract class AbstractDataProvider<
    * - Exposes the static's dataStreamIdentifiers.
    * - Subclasses with dynamic identifiers may override this getter.
    */
-  get dataStreamIdentifiers(): UseArgs<TA>['dataProviderStatic']['dataStreamIdentifiers'] {
+  get dataStreamIdentifiers(): TDataProviderStatic['dataStreamIdentifiers'] {
     return this.staticSide.dataStreamIdentifiers;
   }
 
@@ -149,8 +153,8 @@ export abstract class AbstractDataProvider<
     dataSource,
     identifier,
   }: {
-    dataSource: InferDataSource<UseArgs<TA>['dataProviderStatic']>;
-    identifier: InferDataProviderIdentifier<UseArgs<TA>['dataProviderStatic']>;
+    dataSource: InferDataSource<TDataProviderStatic>;
+    identifier: InferDataProviderIdentifier<TDataProviderStatic>;
   }) {
     // dataSource is passed from create() after getDataSource() succeeds
     // This avoids calling getDataSource in constructor and handles Result properly
@@ -202,7 +206,9 @@ export abstract class AbstractDataProvider<
     cursor?: DataProviderCursor;
     dataStreamIdentifier: DataStreamIdentifier;
   }): Result<
-    DataStreamUpdateBatch,
+    DataStreamUpdateBatch<
+      BaseChartDataSample<object, object, DataStreamIdentifier>
+    >,
     DataProviderNoNewDataError | DataProviderUnknownStreamError
   > {
     return this.#validateStreamIdentifier(dataStreamIdentifier).andThen(() => {
@@ -219,7 +225,7 @@ export abstract class AbstractDataProvider<
           dataStreamIdentifier,
         });
         return acc.add(sample);
-      }, new Set<BaseChartDataSample>());
+      }, new Set<BaseChartDataSample<object, object, DataStreamIdentifier>>());
 
       return this.#finalizeBatch({
         data,
@@ -236,7 +242,7 @@ export abstract class AbstractDataProvider<
   }: {
     dataStreamIdentifier: DataStreamIdentifier;
   }): Result<
-    BaseChartDataSample,
+    BaseChartDataSample<object, object, DataStreamIdentifier>,
     DataProviderUnknownStreamError | DataStreamHasNoDataError
   > {
     return this.#validateStreamIdentifier(dataStreamIdentifier).andThen(() => {
@@ -263,8 +269,14 @@ export abstract class AbstractDataProvider<
   /**
    * Return example (latest) samples for all known streams without advancing cursors. Streams with no data are omitted.
    */
-  getExampleDataSampleForStreams(): ReadonlyMap<string, BaseChartDataSample> {
-    const examples = new Map<string, BaseChartDataSample>();
+  getExampleDataSampleForStreams(): ReadonlyMap<
+    string,
+    BaseChartDataSample<object, object, DataStreamIdentifier>
+  > {
+    const examples = new Map<
+      string,
+      BaseChartDataSample<object, object, DataStreamIdentifier>
+    >();
 
     this.dataStreamIdentifiers.forEach((stream) => {
       const res = this.getExampleDataSampleForStream({
@@ -282,16 +294,12 @@ export abstract class AbstractDataProvider<
   /**
    * Provider-specific data source (e.g., Set<Tick>).
    */
-  protected readonly _dataSource: InferDataSource<
-    UseArgs<TA>['dataProviderStatic']
-  >;
+  protected readonly _dataSource: InferDataSource<TDataProviderStatic>;
 
   /**
    * Access the subclass static members in a type-safe manner.
    */
-  protected get staticSide(): UseArgs<TA>['dataProviderStatic'] {
-    return this.constructor as unknown as UseArgs<TA>['dataProviderStatic'];
-  }
+  protected abstract readonly staticSide: TDataProviderStatic;
 
   /**
    * Optional helper for subclasses to clear internal cursor state.
@@ -305,9 +313,7 @@ export abstract class AbstractDataProvider<
    * ChartDataSample. The base will inject identity fields automatically.
    */
   protected abstract _dataSampleSourceAdapter(args: {
-    dataSampleSource: InstanceType<
-      UseArgs<TA>['dataProviderStatic']['dataSampleSource']
-    >;
+    dataSampleSource: InstanceType<TDataProviderStatic['dataSampleSource']>;
     dataStreamIdentifier: DataStreamIdentifier;
   }): Readonly<{
     data: object;
@@ -322,9 +328,7 @@ export abstract class AbstractDataProvider<
   protected abstract _dataSampleSourceRecordsSince(args: {
     dataStreamIdentifier: DataStreamIdentifier;
     sinceDate?: Date;
-  }): Iterable<
-    InstanceType<UseArgs<TA>['dataProviderStatic']['dataSampleSource']>
-  >;
+  }): Iterable<InstanceType<TDataProviderStatic['dataSampleSource']>>;
 
   /**
    * Create a canonical BaseChartDataSample from a provider's raw data source record. Identity fields are injected here.
@@ -333,11 +337,9 @@ export abstract class AbstractDataProvider<
     dataSampleSource,
     dataStreamIdentifier,
   }: {
-    dataSampleSource: InstanceType<
-      UseArgs<TA>['dataProviderStatic']['dataSampleSource']
-    >;
+    dataSampleSource: InstanceType<TDataProviderStatic['dataSampleSource']>;
     dataStreamIdentifier: DataStreamIdentifier;
-  }): BaseChartDataSample {
+  }): BaseChartDataSample<object, object, DataStreamIdentifier> {
     const core = this._dataSampleSourceAdapter({
       dataSampleSource,
       dataStreamIdentifier,
@@ -371,9 +373,16 @@ export abstract class AbstractDataProvider<
     data,
     dataStreamIdentifier,
   }: {
-    data: ReadonlySet<BaseChartDataSample>;
+    data: ReadonlySet<
+      BaseChartDataSample<object, object, DataStreamIdentifier>
+    >;
     dataStreamIdentifier: DataStreamIdentifier;
-  }): Result<DataStreamUpdateBatch, DataProviderNoNewDataError> {
+  }): Result<
+    DataStreamUpdateBatch<
+      BaseChartDataSample<object, object, DataStreamIdentifier>
+    >,
+    DataProviderNoNewDataError
+  > {
     if (data.size === 0) {
       return err(
         createDataProviderNoNewDataError({ streamId: dataStreamIdentifier.id }),
@@ -390,7 +399,8 @@ export abstract class AbstractDataProvider<
           ? sample
           : currentLatest;
       },
-      undefined as BaseChartDataSample | undefined,
+      undefined as
+        BaseChartDataSample<object, object, DataStreamIdentifier> | undefined,
     );
 
     if (latestSample === undefined) {

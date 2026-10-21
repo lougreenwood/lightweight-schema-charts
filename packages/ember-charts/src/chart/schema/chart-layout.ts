@@ -197,7 +197,7 @@ export class ChartLayout {
   toggleSeries({
     identifier: { dataStreamIdentifier, fieldPath },
   }: {
-    identifier: SeriesIdentifier;
+    identifier: SeriesIdentifier<DataStreamIdentifier>;
   }): Result<true, ChartLayoutToggleSeriesError> {
     const groupId = this.#resolveGroupId({ dataStreamIdentifier });
     if (groupId === undefined) {

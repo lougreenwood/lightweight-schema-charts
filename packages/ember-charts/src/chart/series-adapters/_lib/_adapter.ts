@@ -16,6 +16,7 @@ import type {
   DeepPartial,
   IChartApi,
   ISeriesApi,
+  PriceFormat,
   SeriesType as LwcSeriesType,
   SeriesOptionsMap,
 } from 'lightweight-charts';
@@ -56,15 +57,10 @@ export type BackfillSeriesArgs<
  *
  * Uses `name` as our internal term; adapters translate to LWC's `title` at the boundary.
  */
-export type SeriesPriceFormat = Readonly<{
-  type: 'custom';
-  formatter: (value: number) => string;
-}>;
-
 export type BaseSeriesOptions = {
   name?: string;
   priceScaleId?: string;
-  priceFormat?: SeriesPriceFormat;
+  priceFormat?: PriceFormat;
 };
 
 /**
@@ -93,7 +89,7 @@ export type ChartTimeSeriesPointOhlc = {
  */
 export type CreateSeriesArgs<
   TOptions extends BaseSeriesOptions,
-  TContext extends CreateSeriesArgsContext = CreateSeriesArgsContext,
+  TContext extends CreateSeriesArgsContext,
 > = {
   context: TContext;
   options?: TOptions;
@@ -142,7 +138,7 @@ export interface SeriesAdapter<
   TOptions extends BaseSeriesOptions,
   TBackfillDatum extends SeriesAdapterInternalPoint,
   TUpdateDatum extends SeriesAdapterInternalPoint,
-  TCreateCtx extends CreateSeriesArgsContext = CreateSeriesArgsContext,
+  TCreateCtx extends CreateSeriesArgsContext,
 > {
   readonly id: TInternal; // internal lowercase id
   readonly seriesType: TExternal; // external LWC series literal
@@ -166,7 +162,8 @@ export type SeriesAdapterLike = SeriesAdapter<
   LwcSeriesType,
   BaseSeriesOptions,
   SeriesAdapterInternalPoint,
-  SeriesAdapterInternalPoint
+  SeriesAdapterInternalPoint,
+  CreateSeriesArgsContext
 >;
 
 /**
@@ -301,7 +298,7 @@ type ResolveUpdateDatum<TOpts extends SeriesAdapterWithDescriptorTOpts> =
 export function translateOptionsToLwc<
   TLwcOptions extends LwcSeriesOptionsUnion,
 >(options: BaseSeriesOptions | undefined): DeepPartial<TLwcOptions> {
-  if (!options) return {} as DeepPartial<TLwcOptions>;
+  if (!options) return {};
 
   const { name, ...rest } = options;
   return { ...rest, title: name } as DeepPartial<TLwcOptions>;

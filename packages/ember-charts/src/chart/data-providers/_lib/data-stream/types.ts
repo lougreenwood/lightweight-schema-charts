@@ -21,10 +21,6 @@
 import type { DataProviderIdentifier } from '../abstract-data-provider/types';
 import type { DataProviderLike } from '../data-provider-like';
 import type { TimeWindow } from './time-window';
-import type {
-  MakeTArgs,
-  UseArgs,
-} from '../../../../vendor/shared-utils/type-utils/resolve-args';
 
 /**
  * Canonical provider sample used by all providers.
@@ -34,22 +30,17 @@ import type {
  * - DataProviderId/StreamId/Type make samples self-describing downstream.
  */
 export interface BaseChartDataSample<
-  TA extends BaseChartDataSampleTArgs = BaseChartDataSampleTArgs,
+  TData extends object,
+  TMeta extends object,
+  TDataStreamIdentifier extends DataStreamIdentifier,
 > {
-  data: UseArgs<TA>['data'];
-  dataProviderIdentifier: UseArgs<TA>['dataProviderIdentifier'];
-  dataStreamIdentifier: UseArgs<TA>['dataStreamIdentifier'];
-  meta: UseArgs<TA>['meta'];
+  data: TData;
+  dataProviderIdentifier: TDataStreamIdentifier['dataProviderIdentifier'];
+  dataStreamIdentifier: TDataStreamIdentifier;
+  meta: TMeta;
   time: Date;
   window: TimeWindow;
 }
-
-export type BaseChartDataSampleTArgs = MakeTArgs<{
-  data: object;
-  dataProviderIdentifier: DataProviderIdentifier;
-  dataStreamIdentifier: DataStreamIdentifier;
-  meta: object;
-}>;
 
 /**
  * Cursor for stream pagination/progress.
@@ -65,21 +56,12 @@ export interface DataProviderCursor {
 /**
  * Template-friendly stream identifier for a logical data stream. Providers may expose one or more stream identifiers.
  */
-export type DataStreamIdentifier<
-  TA extends DataStreamIdentifierTArgs = DataStreamIdentifierTArgs,
-> = Readonly<{
-  dataProviderIdentifier: UseArgs<TA>['dataProviderIdentifier'];
-  id: UseArgs<TA>['id'];
-  type: UseArgs<TA>['type'];
-  typeFamily?: UseArgs<TA>['typeFamily'];
-}>;
-
-export type DataStreamIdentifierTArgs = MakeTArgs<{
-  dataProviderIdentifier: DataProviderIdentifier;
-  id: string;
-  type: string;
-  typeFamily?: string;
-}>;
+export interface DataStreamIdentifier {
+  readonly dataProviderIdentifier: DataProviderIdentifier;
+  readonly id: string;
+  readonly type: string;
+  readonly typeFamily?: string;
+}
 
 /**
  * Update event for a chart data stream.
@@ -87,18 +69,17 @@ export type DataStreamIdentifierTArgs = MakeTArgs<{
  * - 'append' adds a new sample after the latest one.
  * - 'replace-latest' replaces the most recent sample (useful for versioned/latest-bar semantics).
  *
- * Uses TOpts (complete specification) rather than TArgs (partial overrides) because the nested `chartDataSample` TArgs
- * must be fully specified to pass through to `BaseChartDataSample`.
+ * The sample type preserves the consumer's data, metadata, and stream identity.
  */
 export type DataStreamUpdate<
-  TOpts extends DataStreamUpdateTOpts = DataStreamUpdateTOpts,
+  TDataSample extends BaseChartDataSample<object, object, DataStreamIdentifier>,
 > =
   | Readonly<{
-      data: BaseChartDataSample<TOpts['chartDataSample']>;
+      data: TDataSample;
       kind: 'append';
     }>
   | Readonly<{
-      data: BaseChartDataSample<TOpts['chartDataSample']>;
+      data: TDataSample;
       kind: 'replace-latest';
     }>;
 
@@ -106,30 +87,17 @@ export type DataStreamUpdate<
  * Batch of updates for a specific stream, including the advanced cursor. Providers must not emit empty batches; emit an
  * error instead.
  *
- * Uses TOpts (complete specification) rather than TArgs (partial overrides) because the nested `chartDataSample` TArgs
- * must be fully specified to pass through to nested generics.
+ * The stream identifier and update samples share the same consumer-supplied sample type.
  */
 export interface DataStreamUpdateBatch<
-  TOpts extends DataStreamUpdateBatchTOpts = DataStreamUpdateBatchTOpts,
+  TDataSample extends BaseChartDataSample<object, object, DataStreamIdentifier>,
 > {
-  dataStreamIdentifier: UseArgs<
-    TOpts['chartDataSample']
-  >['dataStreamIdentifier'];
+  dataStreamIdentifier: TDataSample['dataStreamIdentifier'];
   newCursor: DataProviderCursor;
-  updates: ReadonlySet<
-    DataStreamUpdate<{ chartDataSample: TOpts['chartDataSample'] }>
-  >;
+  updates: ReadonlySet<DataStreamUpdate<TDataSample>>;
 }
 
 export type InferDataStreamIdentifiers<TDataProvider extends DataProviderLike> =
-  TDataProvider['dataStreamIdentifiers'] extends ReadonlySet<infer I>
-    ? I
+  TDataProvider['dataStreamIdentifiers'] extends ReadonlySet<infer TIdentifier>
+    ? TIdentifier
     : never;
-
-type DataStreamUpdateBatchTOpts = {
-  chartDataSample: BaseChartDataSampleTArgs;
-};
-
-type DataStreamUpdateTOpts = {
-  chartDataSample: BaseChartDataSampleTArgs;
-};

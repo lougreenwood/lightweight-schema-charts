@@ -1,10 +1,8 @@
+import type { AppErrorArgs } from '../errors/app-error';
 import type { AppError } from '../errors/app-error';
 import type { Result } from 'true-myth';
 
-import type {
-  AnnotatedResultSet,
-  AnnotatedResultSetOpts,
-} from './annotated-result-set/types';
+import type { AnnotatedResultSet } from './annotated-result-set/types';
 
 export type {
   AnnotatedResultSet,
@@ -15,7 +13,7 @@ export type {
 export function makeAnnotatedResultSet<
   const TMetadata extends object,
   const TSuccess,
-  const TError extends AppError,
+  const TError extends AppError<AppErrorArgs & AppErrorArgs>,
 >(
   entries: ReadonlyArray<{
     readonly metadata: TMetadata;
@@ -31,7 +29,7 @@ export function makeAnnotatedResultSet<
 export function makeAnnotatedResultSet<
   const TMetadata extends object,
   const TSuccess,
-  const TError extends AppError,
+  const TError extends AppError<AppErrorArgs & AppErrorArgs>,
 >({
   entries,
   processEntry,
@@ -56,7 +54,7 @@ export function makeAnnotatedResultSet<
   const TKey extends string,
   const TMetadata extends object,
   const TSuccess,
-  const TError extends AppError,
+  const TError extends AppError<AppErrorArgs & AppErrorArgs>,
 >({
   createEntry,
   createMetadata,
@@ -75,25 +73,31 @@ export function makeAnnotatedResultSet(
   arg:
     | ReadonlyArray<{
         readonly metadata: object;
-        readonly value: Result<unknown, AppError>;
+        readonly value: Result<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
       }>
     | {
         readonly entries: AnnotatedResultSet<{
           metadata: object;
           success: unknown;
-          error: AppError;
+          error: AppError<AppErrorArgs & AppErrorArgs>;
         }>;
         readonly processEntry: (args: {
           readonly metadata: object;
           readonly value: unknown;
-        }) => Result<unknown, AppError>;
+        }) => Result<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
       }
     | {
-        readonly createEntry: (key: string) => Result<unknown, AppError>;
+        readonly createEntry: (
+          key: string,
+        ) => Result<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
         readonly createMetadata: (key: string) => object;
         readonly keys: ReadonlyArray<string>;
       },
-): AnnotatedResultSet<{ metadata: object; success: unknown; error: AppError }> {
+): AnnotatedResultSet<{
+  metadata: object;
+  success: unknown;
+  error: AppError<AppErrorArgs & AppErrorArgs>;
+}> {
   if (Array.isArray(arg)) {
     return new Set(arg);
   }
@@ -103,12 +107,12 @@ export function makeAnnotatedResultSet(
       readonly entries: AnnotatedResultSet<{
         metadata: object;
         success: unknown;
-        error: AppError;
+        error: AppError<AppErrorArgs & AppErrorArgs>;
       }>;
       readonly processEntry: (args: {
         readonly metadata: object;
         readonly value: unknown;
-      }) => Result<unknown, AppError>;
+      }) => Result<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
     };
     return new Set(
       [...entries].map(
@@ -124,7 +128,9 @@ export function makeAnnotatedResultSet(
   }
 
   const { createEntry, createMetadata, keys } = arg as {
-    readonly createEntry: (key: string) => Result<unknown, AppError>;
+    readonly createEntry: (
+      key: string,
+    ) => Result<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
     readonly createMetadata: (key: string) => object;
     readonly keys: ReadonlyArray<string>;
   };

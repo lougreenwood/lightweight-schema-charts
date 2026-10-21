@@ -57,7 +57,7 @@ The modifier takes the state, an adapter registry, and a small domain context:
 ></div>
 ```
 
-`test-app/app/synthetic/synthetic-chart.ts` is the reference adapter: a complete synthetic provider, presenter, and candle set. It is the fastest way to see the required shapes.
+`test-app/app/synthetic/` contains the reference adapter: a provider and presenter extending the exported bases, a registered wrapped-value handler, and the schema wiring. It compiles against the public contracts without double casts. Generic type arguments are always required; none have defaults.
 
 ## Workspace
 
@@ -105,9 +105,9 @@ Every workspace package with its own dependencies needs a `node_modules` named v
 ## Known limitations
 
 - The modifier removes series and panes on teardown but does not dispose the chart instance.
-- Package declarations are not emitted by the default build.
-- Part of the series projection path still uses an internal currency value type rather than plain numbers.
-- One acceptance test covers one rendering path. Adapters, multi-pane layouts, and removal paths are untested.
+- The default build emits runtime modules and declarations. Git consumers must select the addon subdirectory and allow its build scripts.
+- Presenters may emit arbitrary values; a selected handler returns typed conversion results and supplies an optional custom price format.
+- One acceptance test covers a wrapped-value rendering path, updates, formatting, error notification, and DOM removal. Unit tests cover handler dispatch and validation. Multi-pane layouts and chart disposal remain unproven.
 
 See [ROADMAP.md](ROADMAP.md) for the engineering work behind these limitations and for the product direction still to be specified.
 

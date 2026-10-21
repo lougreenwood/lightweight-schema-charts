@@ -3,6 +3,9 @@ export const lightweightSchemaChartsEmberPackage =
 
 export { createReactiveChartSchema } from './chart/schema/create-reactive-chart-schema';
 export { ReactiveChartSchema } from './chart/schema/schema-reactive';
+export { ChartLayout } from './chart/schema/chart-layout';
+export { AbstractDataProvider } from './chart/data-providers/_lib/abstract-data-provider';
+export { AbstractDataStreamPresenter } from './chart/data-stream-presenters/_lib/abstract-data-stream-presenter';
 export {
   SeriesAdapterRegistry,
   adapters,
@@ -12,11 +15,79 @@ export type {
   ChartState,
   PaneState,
   SeriesGroupState,
+  BaseStructuralDescriptor,
+  BranchStructuralDescriptor,
+  CompleteLeafStructuralDescriptor,
+  PartialLeafStructuralDescriptor,
+  ChartLayoutData,
+  ChartLayoutFragmentData,
+  ChartLayoutOverlayEntry,
+  ChartLayoutOverlaySnapshot,
+  GroupId,
+  PaneLayout,
+  PerStreamDataState,
+  PriceScaleLayout,
+  ScaleMargins,
+  SeriesGroupLayout,
+  SeriesIdentifier,
+  SeriesLayout,
+  SeriesPath,
+  SeriesState,
+  StructuralGroupType,
 } from './chart/schema/types';
 export type { DataProviderLike } from './chart/data-providers/_lib/data-provider-like';
+export type {
+  DataProviderIdentifier,
+  DataProviderStatic,
+  InferDataProviderIdentifier,
+  InferDataSource,
+} from './chart/data-providers/_lib/abstract-data-provider/types';
+export type {
+  BaseChartDataSample,
+  DataStreamIdentifier,
+  DataProviderCursor,
+  DataStreamUpdate,
+  DataStreamUpdateBatch,
+} from './chart/data-providers/_lib/data-stream/types';
+export type { TimeWindow } from './chart/data-providers/_lib/data-stream/time-window';
+export type { ProjectedSeriesPoint } from './chart/data-stream-presenters/_lib/abstract-data-stream-presenter/types';
+export type { ChartDomainContext } from './chart/modifiers/chart-lwc-adapter/types';
+export type {
+  SeriesType,
+  NumericSeriesType,
+  OhlcSeriesType,
+} from './chart/series-adapters/_lib/_registry/types';
+export type {
+  SeriesAdapterInternalPoint,
+  ChartTimeSeriesPointNumber,
+  ChartTimeSeriesPointOhlc,
+  SeriesAdapter,
+  SeriesAdapterLike,
+} from './chart/series-adapters/_lib/_adapter';
+export type {
+  AppError,
+  AppErrorArgs,
+  AppErrorLike,
+  GenericErrorArgs,
+} from './vendor/shared-utils/errors/app-error';
 export type { DataStreamPresenterLike } from './chart/data-stream-presenters/_lib/data-stream-presenter-like';
 export type { DataStreamPresenterFactory } from './chart/data-stream-presenters/_lib/data-stream-presenter-registry/types';
 export type {
   SeriesValueHandler,
   SeriesValueHandlers,
+  SeriesValueFailure,
+  InterpretedOhlc,
+} from './chart/series-adapters/_lib/value-handler/types';
+export type {
+  SeriesValueHandlerNotFoundError,
+  SeriesValueNumberValidationError,
+  SeriesValueOhlcValidationError,
+  SeriesValueOhlcConverterMissingError,
+  SeriesValuePointsEmptyError,
+} from './chart/series-adapters/_lib/value-handler/errors';
+export {
+  interpretProjectedPoints,
+  numericSeriesValueHandler,
+  validateSeriesNumber,
+  validateSeriesOhlc,
 } from './chart/series-adapters/_lib/value-handler';

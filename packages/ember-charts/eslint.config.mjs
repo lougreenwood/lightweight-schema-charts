@@ -17,7 +17,6 @@ import js from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import prettier from 'eslint-config-prettier';
 import ember from 'eslint-plugin-ember/recommended';
-import importPlugin from 'eslint-plugin-import';
 import n from 'eslint-plugin-n';
 import globals from 'globals';
 import ts from 'typescript-eslint';
@@ -33,7 +32,14 @@ const tsParserOptions = {
 };
 
 export default defineConfig([
-  globalIgnores(['dist/', 'dist-*/', 'declarations/', 'coverage/', '!**/.*']),
+  globalIgnores([
+    'dist/',
+    'dist-*/',
+    'declarations/',
+    'coverage/',
+    'src/vendor/',
+    '!**/.*',
+  ]),
   js.configs.recommended,
   prettier,
   ember.configs.base,
@@ -80,16 +86,6 @@ export default defineConfig([
       },
       ember.configs.gts,
     ],
-  },
-  {
-    files: ['src/**/*'],
-    plugins: {
-      import: importPlugin,
-    },
-    rules: {
-      // require relative imports use full extensions
-      'import/extensions': ['error', 'always', { ignorePackages: true }],
-    },
   },
   /**
    * CJS node files

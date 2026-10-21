@@ -35,8 +35,8 @@ export function dataStreamIdentifiersMatch({
  * Type guard for CompleteLeafStructuralDescriptor
  */
 export function isCompleteLeafStructuralDescriptor(
-  descriptor: BaseStructuralDescriptor,
-): descriptor is CompleteLeafStructuralDescriptor {
+  descriptor: BaseStructuralDescriptor<DataStreamIdentifier>,
+): descriptor is CompleteLeafStructuralDescriptor<DataStreamIdentifier> {
   return descriptor.kind === 'series' && 'seriesKind' in descriptor;
 }
 
@@ -50,8 +50,8 @@ export function isMaterializedSeriesNode(
  * Type guard for BranchStructuralDescriptor
  */
 export function isBranchStructuralDescriptor(
-  descriptor: BaseStructuralDescriptor,
-): descriptor is BranchStructuralDescriptor {
+  descriptor: BaseStructuralDescriptor<DataStreamIdentifier>,
+): descriptor is BranchStructuralDescriptor<DataStreamIdentifier> {
   return descriptor.kind === 'structural';
 }
 
@@ -65,11 +65,14 @@ export function findDescriptorWithParent({
   fieldPath,
   parent,
 }: {
-  descriptors: ReadonlySet<BaseStructuralDescriptor>;
+  descriptors: ReadonlySet<BaseStructuralDescriptor<DataStreamIdentifier>>;
   fieldPath: SeriesPath;
-  parent?: BaseStructuralDescriptor;
+  parent?: BaseStructuralDescriptor<DataStreamIdentifier>;
 }):
-  | { descriptor: BaseStructuralDescriptor; parent?: BaseStructuralDescriptor }
+  | {
+      descriptor: BaseStructuralDescriptor<DataStreamIdentifier>;
+      parent?: BaseStructuralDescriptor<DataStreamIdentifier>;
+    }
   | undefined {
   for (const descriptor of descriptors) {
     if (descriptor.identifier.fieldPath === fieldPath) {

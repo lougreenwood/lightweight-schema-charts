@@ -1,7 +1,5 @@
-import type {
-  AnnotatedTaskSet,
-  AnnotatedTaskSetOpts,
-} from './annotated-task-set/types';
+import type { AppErrorArgs } from '../errors/app-error';
+import type { AnnotatedTaskSet } from './annotated-task-set/types';
 import type { AppError } from '../errors/app-error';
 import type { Task } from 'true-myth';
 
@@ -16,7 +14,7 @@ export type {
 export function makeAnnotatedTaskSet<
   const TMetadata extends object,
   const TSuccess,
-  const TError extends AppError,
+  const TError extends AppError<AppErrorArgs & AppErrorArgs>,
 >(
   entries: ReadonlyArray<{
     readonly metadata: TMetadata;
@@ -27,7 +25,7 @@ export function makeAnnotatedTaskSet<
 export function makeAnnotatedTaskSet<
   const TMetadata extends object,
   const TSuccess,
-  const TError extends AppError,
+  const TError extends AppError<AppErrorArgs & AppErrorArgs>,
 >({
   entries,
   processEntry,
@@ -50,7 +48,7 @@ export function makeAnnotatedTaskSet<
   const TKey extends string,
   const TMetadata extends object,
   const TSuccess,
-  const TError extends AppError,
+  const TError extends AppError<AppErrorArgs & AppErrorArgs>,
 >({
   createEntry,
   createMetadata,
@@ -68,7 +66,7 @@ export function makeAnnotatedTaskSet<
   const TKey extends string,
   const TMetadata extends object,
   const TSuccess,
-  const TError extends AppError,
+  const TError extends AppError<AppErrorArgs & AppErrorArgs>,
 >({
   createMetadata,
   keys,
@@ -85,34 +83,46 @@ export function makeAnnotatedTaskSet(
   arg:
     | ReadonlyArray<{
         readonly metadata: object;
-        readonly value: Task<unknown, AppError>;
+        readonly value: Task<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
       }>
     | {
         readonly entries: AnnotatedTaskSet<{
-          error: AppError;
+          error: AppError<AppErrorArgs & AppErrorArgs>;
           metadata: object;
           success: unknown;
         }>;
         readonly processEntry: (args: {
           readonly metadata: object;
           readonly value: unknown;
-        }) => Task<unknown, AppError>;
+        }) => Task<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
       }
     | {
         readonly keys: ReadonlyArray<string>;
-        readonly createEntry: (key: string) => Task<unknown, AppError>;
+        readonly createEntry: (
+          key: string,
+        ) => Task<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
         readonly createMetadata: (key: string) => object;
       }
     | {
         readonly keys: ReadonlyArray<string>;
         readonly createMetadata: (key: string) => object;
-        readonly processEntry: (key: string) => Task<unknown, AppError>;
+        readonly processEntry: (
+          key: string,
+        ) => Task<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
       },
 ):
-  | AnnotatedTaskSet<{ error: AppError; metadata: object; success: unknown }>
+  | AnnotatedTaskSet<{
+      error: AppError<AppErrorArgs & AppErrorArgs>;
+      metadata: object;
+      success: unknown;
+    }>
   | Task<
-      AnnotatedTaskSet<{ error: AppError; metadata: object; success: unknown }>,
-      AppError
+      AnnotatedTaskSet<{
+        error: AppError<AppErrorArgs & AppErrorArgs>;
+        metadata: object;
+        success: unknown;
+      }>,
+      AppError<AppErrorArgs & AppErrorArgs>
     > {
   if (Array.isArray(arg)) {
     return new Set(arg);
@@ -126,9 +136,12 @@ export function makeAnnotatedTaskSet(
           Task<
             readonly {
               readonly metadata: object;
-              readonly value: Task<unknown, AppError>;
+              readonly value: Task<
+                unknown,
+                AppError<AppErrorArgs & AppErrorArgs>
+              >;
             }[],
-            AppError
+            AppError<AppErrorArgs & AppErrorArgs>
           >
         >(
           (chain, entry) =>
@@ -146,7 +159,10 @@ export function makeAnnotatedTaskSet(
           resolve(
             [] as readonly {
               readonly metadata: object;
-              readonly value: Task<unknown, AppError>;
+              readonly value: Task<
+                unknown,
+                AppError<AppErrorArgs & AppErrorArgs>
+              >;
             }[],
           ),
         )
@@ -159,9 +175,12 @@ export function makeAnnotatedTaskSet(
         Task<
           readonly {
             readonly metadata: object;
-            readonly value: Task<unknown, AppError>;
+            readonly value: Task<
+              unknown,
+              AppError<AppErrorArgs & AppErrorArgs>
+            >;
           }[],
-          AppError
+          AppError<AppErrorArgs & AppErrorArgs>
         >
       >(
         (chain, key) =>
@@ -174,7 +193,10 @@ export function makeAnnotatedTaskSet(
         resolve(
           [] as readonly {
             readonly metadata: object;
-            readonly value: Task<unknown, AppError>;
+            readonly value: Task<
+              unknown,
+              AppError<AppErrorArgs & AppErrorArgs>
+            >;
           }[],
         ),
       )
@@ -183,7 +205,9 @@ export function makeAnnotatedTaskSet(
 
   const { createEntry, createMetadata, keys } = arg as {
     readonly keys: ReadonlyArray<string>;
-    readonly createEntry: (key: string) => Task<unknown, AppError>;
+    readonly createEntry: (
+      key: string,
+    ) => Task<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
     readonly createMetadata: (key: string) => object;
   };
   return all(keys.map(createEntry)).map(
@@ -195,7 +219,11 @@ export function makeAnnotatedTaskSet(
         ),
       ),
   ) as unknown as Task<
-    AnnotatedTaskSet<{ error: AppError; metadata: object; success: unknown }>,
-    AppError
+    AnnotatedTaskSet<{
+      error: AppError<AppErrorArgs & AppErrorArgs>;
+      metadata: object;
+      success: unknown;
+    }>,
+    AppError<AppErrorArgs & AppErrorArgs>
   >;
 }

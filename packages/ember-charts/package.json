@@ -9,9 +9,6 @@
   "repository": "",
   "license": "MIT",
   "author": "",
-  "imports": {
-    "#src/*": "./src/*"
-  },
   "exports": {
     ".": {
       "types": "./declarations/index.d.ts",
@@ -30,7 +27,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "rollup --config",
+    "build": "pnpm run build:declarations && rollup --config",
+    "prepare": "pnpm run build",
     "format": "prettier . --cache --write",
     "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\" --prefixColors auto",
     "lint:fix": "concurrently \"pnpm:lint:*:fix\" --names \"fix:\" --prefixColors auto && pnpm run format",
@@ -41,7 +39,7 @@
     "lint:js:fix": "eslint . --fix",
     "lint:types": "ember-tsc --noEmit",
     "typecheck": "ember-tsc --noEmit",
-    "build:declarations": "pnpm exec ember-tsc --declaration --project tsconfig.publish.json"
+    "build:declarations": "node build-declarations.mjs"
   },
   "dependencies": {
     "@embroider/addon-shim": "^1.8.9",
@@ -57,6 +55,7 @@
     "pino": "9.5.0",
     "stable-hash": "^0.0.6",
     "true-myth": "9.3.1",
+    "type-fest": "^4.41.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

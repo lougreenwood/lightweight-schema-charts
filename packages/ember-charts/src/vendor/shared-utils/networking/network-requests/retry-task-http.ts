@@ -1,3 +1,4 @@
+import type { AppErrorArgs } from '../../errors/app-error';
 import type { AppError } from '../../errors/app-error';
 import type { AbortableHttpError } from './fetch-task/errors';
 import type { RetryTaskHttpOptions } from './retry-task/retry-task-http/types';
@@ -7,7 +8,9 @@ import { retryTask } from './retry-task';
 import { exponentialBackoffRetryStrategyFactory } from './retry-task/retry-task-http/strategies/exponential-backoff-retry-strategy-factory';
 import { just, nothing } from 'true-myth/maybe';
 
-export function isHttpErrorRetryable(error: AppError): Maybe<boolean> {
+export function isHttpErrorRetryable(
+  error: AppError<AppErrorArgs & AppErrorArgs>,
+): Maybe<boolean> {
   switch (error.errorCode) {
     case 'HTTP_4XX_CLIENT_ERROR':
       return just(false);

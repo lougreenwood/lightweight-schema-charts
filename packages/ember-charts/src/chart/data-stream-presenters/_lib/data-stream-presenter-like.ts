@@ -8,11 +8,7 @@ import type {
   BaseStructuralDescriptor,
   SeriesPath,
 } from '../../schema/types';
-import type { SeriesAdapterInternalPoint } from '../../series-adapters/_lib/_adapter';
-import type {
-  MakeTArgs,
-  UseArgs,
-} from '../../../vendor/shared-utils/type-utils/resolve-args';
+import type { ProjectedSeriesPoint } from './abstract-data-stream-presenter/types';
 import type { Result } from 'true-myth/result';
 
 /**
@@ -55,24 +51,17 @@ import type { Result } from 'true-myth/result';
  * }
  * ```
  *
- * @template TA - TArgs override shape (defaults to DataStreamPresenterLikeTArgs)
+ * Consumer provider and stream types can be narrowed directly.
  */
 export type DataStreamPresenterLike<
-  TA extends DataStreamPresenterLikeTArgs = DataStreamPresenterLikeTArgs,
+  TDataProvider extends DataProviderLike,
+  TDataStreamIdentifier extends DataStreamIdentifier,
 > =
-  | ConfigurableDataStreamPresenterLike<TA>
-  | NonConfigurableDataStreamPresenterLike<TA>;
-
-/**
- * TArgs for DataStreamPresenterLike interface.
- *
- * Uses TArgs pattern (partial overrides with fallbacks) because the interface has default type parameters. Callers can
- * specify only the fields they want to narrow.
- */
-export type DataStreamPresenterLikeTArgs = MakeTArgs<{
-  dataProvider: DataProviderLike;
-  dataStreamIdentifier: DataStreamIdentifier;
-}>;
+  | ConfigurableDataStreamPresenterLike<TDataProvider, TDataStreamIdentifier>
+  | NonConfigurableDataStreamPresenterLike<
+      TDataProvider,
+      TDataStreamIdentifier
+    >;
 
 /**
  * HasConfigValues
@@ -84,7 +73,9 @@ export type DataStreamPresenterLikeTArgs = MakeTArgs<{
  * `IndicatorModelLike`) will have additional properties, but non-form trading-chart consumers only need the canonical
  * config-values handle.
  */
-export interface HasConfigValues {}
+export interface HasConfigValues {
+  readonly configValues: unknown;
+}
 
 /**
  * BaseDataStreamPresenterLike
@@ -92,20 +83,21 @@ export interface HasConfigValues {}
  * Common interface shared by all data stream presenters. Contains all properties and methods except configurability,
  * which is handled by the discriminated union.
  *
- * @template TA - TArgs override shape (defaults to DataStreamPresenterLikeTArgs)
+ * Keeps the consumer's provider and stream identity types.
  */
 interface BaseDataStreamPresenterLike<
-  TA extends DataStreamPresenterLikeTArgs = DataStreamPresenterLikeTArgs,
+  TDataProvider extends DataProviderLike,
+  TDataStreamIdentifier extends DataStreamIdentifier,
 > {
   /**
    * The data provider instance that owns this presenter's data stream.
    */
-  readonly dataProvider: UseArgs<TA>['dataProvider'];
+  readonly dataProvider: TDataProvider;
 
   /**
    * The data stream identifier for this presenter.
    */
-  readonly dataStreamIdentifier: UseArgs<TA>['dataStreamIdentifier'];
+  readonly dataStreamIdentifier: TDataStreamIdentifier;
 
   /**
    * Default layout fragment (Level 1) for this presenter's data stream. Used by the reactive schema to assemble the
@@ -135,7 +127,7 @@ interface BaseDataStreamPresenterLike<
    * throughout the descriptor chain.
    */
   readonly structuralDescriptors: ReadonlySet<
-    BaseStructuralDescriptor<UseArgs<TA>['dataStreamIdentifier']>
+    BaseStructuralDescriptor<TDataStreamIdentifier>
   >;
 
   /**
@@ -148,16 +140,18 @@ interface BaseDataStreamPresenterLike<
    * (no fetching, no cursor movement). The generic type parameter preserves the specific DataStreamIdentifier type.
    */
   describeFields(): ReadonlySet<
-    BaseStructuralDescriptor<UseArgs<TA>['dataStreamIdentifier']>
+    BaseStructuralDescriptor<TDataStreamIdentifier>
   >;
 
   /**
-   * Project field data into adapter-ready points (atomic unit of work).
+   * Project field data without imposing adapter value semantics.
    */
-  projectField<TProjectedData extends SeriesAdapterInternalPoint>(args: {
-    dataSamples: ReadonlySet<BaseChartDataSample>;
+  projectField(args: {
+    dataSamples: ReadonlySet<
+      BaseChartDataSample<object, object, DataStreamIdentifier>
+    >;
     fieldPath: SeriesPath;
-  }): ReadonlySet<TProjectedData>;
+  }): ReadonlySet<ProjectedSeriesPoint>;
 }
 
 /**
@@ -166,11 +160,12 @@ interface BaseDataStreamPresenterLike<
  * Presenter for data streams that support configuration (e.g., indicator streams). The `getStreamDataSource()` method
  * returns a data source with configuration when called, guaranteed by the `isConfigurable: true` discriminator.
  *
- * @template TA - TArgs override shape (defaults to DataStreamPresenterLikeTArgs)
+ * The configurable data-source contract is consumer supplied.
  */
-interface ConfigurableDataStreamPresenterLike<
-  TA extends DataStreamPresenterLikeTArgs = DataStreamPresenterLikeTArgs,
-> extends BaseDataStreamPresenterLike<TA> {
+export interface ConfigurableDataStreamPresenterLike<
+  TDataProvider extends DataProviderLike,
+  TDataStreamIdentifier extends DataStreamIdentifier,
+> extends BaseDataStreamPresenterLike<TDataProvider, TDataStreamIdentifier> {
   /**
    * Discriminator indicating this presenter's data stream supports configuration.
    */
@@ -193,11 +188,12 @@ interface ConfigurableDataStreamPresenterLike<
  * Presenter for data streams that do not support configuration (e.g., ticker streams). The data source exists but does
  * not have a `configValues` property.
  *
- * @template TA - TArgs override shape (defaults to DataStreamPresenterLikeTArgs)
+ * The data source need not expose configuration.
  */
-interface NonConfigurableDataStreamPresenterLike<
-  TA extends DataStreamPresenterLikeTArgs = DataStreamPresenterLikeTArgs,
-> extends BaseDataStreamPresenterLike<TA> {
+export interface NonConfigurableDataStreamPresenterLike<
+  TDataProvider extends DataProviderLike,
+  TDataStreamIdentifier extends DataStreamIdentifier,
+> extends BaseDataStreamPresenterLike<TDataProvider, TDataStreamIdentifier> {
   /**
    * Discriminator indicating this presenter's data stream does not support configuration.
    */

@@ -1,4 +1,4 @@
-import type { ClassLike } from './types';
+import type { ClassLike, LogWriter } from './types';
 import type pino from 'pino';
 
 /**
@@ -7,11 +7,12 @@ import type pino from 'pino';
  * This is a `pino.Logger` with an attached `makeChildLogger` method for creating namespaced child loggers with
  * `[contextId]` message prefixes. Fastify accepts this because it IS a real Pino logger.
  */
-export type AppLogger = pino.Logger & {
-  makeChildLogger: <T extends string>(
-    args: { namespace: T } | { self: ClassLike<T> },
-  ) => AppLogger;
-};
+export type AppLogger = LogWriter &
+  pino.Logger & {
+    makeChildLogger: <T extends string>(
+      args: { namespace: T } | { self: ClassLike<T> },
+    ) => AppLogger;
+  };
 
 /**
  * Create a namespaced child logger from a Pino logger.

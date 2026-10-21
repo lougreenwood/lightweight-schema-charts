@@ -3,6 +3,7 @@
   "include": ["app", "tests", "types"],
   "compilerOptions": {
     "allowJs": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
       "test-app/tests/*": ["./tests/*"],
       "test-app/*": ["./app/*"],

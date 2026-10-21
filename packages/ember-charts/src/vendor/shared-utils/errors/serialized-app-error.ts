@@ -1,7 +1,5 @@
-import type {
-  AppError,
-  GenericErrorInstance,
-} from './app-error';
+import type { AppErrorArgs } from './app-error';
+import type { AppError, GenericErrorInstance } from './app-error';
 import type { LogSeverity } from '../logger/types';
 import type Result from 'true-myth/result';
 
@@ -52,12 +50,14 @@ export type SerializedResult<TOk, TError extends SerializedAppError> =
 export function toSerializedAppError({
   error: { cause, errorCode, errorGroup, message, meta, severity, type },
 }: {
-  error: AppError;
+  error: AppError<AppErrorArgs & AppErrorArgs>;
 }): SerializedAppError {
   return {
     cause:
       cause !== undefined
-        ? toSerializedAppError({ error: cause as AppError })
+        ? toSerializedAppError({
+            error: cause as AppError<AppErrorArgs & AppErrorArgs>,
+          })
         : undefined,
     errorCode,
     errorGroup,
@@ -132,7 +132,7 @@ export function fromSerializedAppError<TError extends SerializedAppError>({
 /**
  * Construct a failure SerializedResult from an AppError. Internally calls toSerializedAppError.
  */
-export function serializedErr(error: AppError): {
+export function serializedErr(error: AppError<AppErrorArgs & AppErrorArgs>): {
   readonly err: SerializedAppError;
 } {
   return { err: toSerializedAppError({ error }) };
@@ -151,7 +151,7 @@ export function serializedOk<const TOk>(ok: TOk): { readonly ok: TOk } {
 export function serializeResult<TOk>({
   result,
 }: {
-  result: Result<TOk, AppError>;
+  result: Result<TOk, AppError<AppErrorArgs & AppErrorArgs>>;
 }): SerializedResult<TOk, SerializedAppError> {
   return result.match({
     Err: (error) =>

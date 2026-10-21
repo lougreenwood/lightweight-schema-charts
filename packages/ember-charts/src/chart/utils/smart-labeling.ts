@@ -1,3 +1,4 @@
+import type { DataStreamIdentifier } from '../data-providers/_lib/data-stream/types';
 import type { BaseStructuralDescriptor } from '../schema/types';
 
 import { isBranchStructuralDescriptor } from '../schema/utils';
@@ -23,7 +24,7 @@ export type SelectionState = 'all' | 'none' | 'some' | false | true;
  */
 export interface SidebarFieldModel {
   children?: ReadonlySet<SidebarFieldModel>;
-  descriptor: BaseStructuralDescriptor;
+  descriptor: BaseStructuralDescriptor<DataStreamIdentifier>;
   selectionState: SelectionState;
 }
 

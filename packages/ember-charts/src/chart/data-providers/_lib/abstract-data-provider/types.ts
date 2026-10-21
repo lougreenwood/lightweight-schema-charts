@@ -1,24 +1,13 @@
+import type { AppErrorArgs } from '../../../../vendor/shared-utils/errors/app-error';
 import type { DataProviderLike } from '../data-provider-like';
-import type {
-  DataStreamIdentifier,
-  DataStreamIdentifierTArgs,
-} from '../data-stream/types';
+import type { DataStreamIdentifier } from '../data-stream/types';
 import type {
   CreateDataProviderInvalidIdError,
   CreateDataProviderInvalidTypeError,
 } from '../../errors';
 import type { AppError } from '../../../../vendor/shared-utils/errors/app-error';
-import type { MakeTArgs } from '../../../../vendor/shared-utils/type-utils/resolve-args';
 import type { Result } from 'true-myth';
 import type { Constructor } from 'type-fest';
-
-/**
- * AbstractDataProviderTArgs
- *
- * TArgs V2 shape for AbstractDataProvider. Allows callers to override the dataProviderStatic field to narrow type
- * inference for the concrete provider implementation.
- */
-export type AbstractDataProviderTArgs = MakeTArgs<DataProviderInstanceArgs>;
 
 /**
  * DataProviderIdentifier
@@ -27,49 +16,12 @@ export type AbstractDataProviderTArgs = MakeTArgs<DataProviderInstanceArgs>;
  * - Type: 'ticker' | 'indicatorGroup' | ...
  * - Id: stable instance id (e.g. 'ticker', collection id, etc.)
  *
- * Uses legacy TArgsInput/_TArgs couplet for type narrowing at call sites.
+ * Consumers narrow identity by extending this structural interface.
  */
-export type DataProviderIdentifier<
-  TArgsInput extends Partial<DataProviderIdentifierArgs> =
-    Partial<DataProviderIdentifierArgs>,
-  _TArgs extends DataProviderIdentifierArgs = DataProviderIdentifierArgs &
-    TArgsInput,
-> = Readonly<{
-  id: _TArgs['id'];
-  type: _TArgs['type'];
-}>;
-
-/**
- * DataProviderInstanceArgs
- *
- * Generic arguments for typing a DataProvider instance. References the concrete static type. The instance derives all
- * type information from the static and the structural return types of its adapter methods, making the implementation
- * the single source of truth.
- */
-export interface DataProviderInstanceArgs<
-  TDataProviderStatic extends DataProviderStatic = DataProviderStatic,
-> {
-  /**
-   * Reference to the concrete static type
-   */
-  dataProviderStatic: TDataProviderStatic;
+export interface DataProviderIdentifier {
+  readonly id: string;
+  readonly type: string;
 }
-
-/**
- * Context passed to provider factories.
- *
- * Contains the MarketDataData stream, pre-filtered indicator providers, and the TradableAssetPair for this chart instance.
- *
- * - `marketDataDataStream`: The MarketDataData stream for this chart (resolved at the chart boundary — one stream per chart).
- * - `indicatorProviders`: Pre-filtered indicator providers matching this chart's marketDataDataStream stream. Providers use this
- *   instead of accessing the full set of providers.
- * - `tradableAssetPair`: The TradableAssetPair for asset identity (base/quote assets, pair name).
- */
-export type DataProviderInstanceContext = Readonly<{
-  indicatorProviders: readonly unknown[];
-  marketDataDataStream: unknown;
-  tradableAssetPair: unknown;
-}>;
 
 /**
  * DataProviderStatic
@@ -80,17 +32,16 @@ export type DataProviderInstanceContext = Readonly<{
  * of truth.
  */
 export interface DataProviderStatic<
-  TDataSource = unknown,
-  TCreateError extends AppError = AppError,
+  TDataSource,
+  TCreateError extends AppError<AppErrorArgs>,
+  TContext extends object,
 > {
   readonly dataSampleSource: Constructor<object>;
 
-  readonly dataStreamIdentifiers: ReadonlySet<
-    DataStreamIdentifier<DataStreamIdentifierTArgs>
-  >;
+  readonly dataStreamIdentifiers: ReadonlySet<DataStreamIdentifier>;
 
   create(args: {
-    context: DataProviderInstanceContext;
+    context: TContext;
     identifier: DataProviderIdentifier;
   }): Result<
     DataProviderLike,
@@ -99,12 +50,10 @@ export interface DataProviderStatic<
     | TCreateError
   >;
 
-  discoverIdentifiers(
-    context: DataProviderInstanceContext,
-  ): ReadonlySet<DataProviderIdentifier>;
+  discoverIdentifiers(context: TContext): ReadonlySet<DataProviderIdentifier>;
 
   getDataSource(args: {
-    context: DataProviderInstanceContext;
+    context: TContext;
     identifier: DataProviderIdentifier;
   }): Result<TDataSource, TCreateError>;
 }
@@ -120,11 +69,17 @@ export interface DataProviderStatic<
  *
  * @typeParam T - A concrete DataProviderStatic whose discovered identifier type is to be inferred.
  */
-export type InferDataProviderIdentifier<T extends DataProviderStatic> =
-  ReturnType<T['discoverIdentifiers']> extends ReadonlySet<
-    infer U extends DataProviderIdentifier
+export type InferDataProviderIdentifier<
+  TDataProviderStatic extends DataProviderStatic<
+    unknown,
+    AppError<AppErrorArgs>,
+    object
+  >,
+> =
+  ReturnType<TDataProviderStatic['discoverIdentifiers']> extends ReadonlySet<
+    infer TIdentifier extends DataProviderIdentifier
   >
-    ? U
+    ? TIdentifier
     : DataProviderIdentifier;
 
 /**
@@ -135,12 +90,16 @@ export type InferDataProviderIdentifier<T extends DataProviderStatic> =
  *
  * @typeParam T - A concrete DataProviderStatic whose data source type is to be inferred.
  */
-export type InferDataSource<T extends DataProviderStatic> =
-  ReturnType<T['getDataSource']> extends Result<infer TDataSource, unknown>
+export type InferDataSource<
+  TDataProviderStatic extends DataProviderStatic<
+    unknown,
+    AppError<AppErrorArgs>,
+    object
+  >,
+> =
+  ReturnType<TDataProviderStatic['getDataSource']> extends Result<
+    infer TDataSource,
+    unknown
+  >
     ? TDataSource
     : never;
-
-/**
- * Type describing the default values for the generic args passed to `DataProviderIdentifier` type as an object
- */
-type DataProviderIdentifierArgs = { id: string; type: string };

@@ -1,7 +1,5 @@
-import type {
-  AnnotatedMaybeSet,
-  AnnotatedMaybeSetOpts,
-} from './annotated-maybe-set/types';
+import type { AppErrorArgs } from '../errors/app-error';
+import type { AnnotatedMaybeSet } from './annotated-maybe-set/types';
 import type { AppError } from '../errors/app-error';
 import type { Maybe } from 'true-myth';
 import type { Task } from 'true-myth/task';
@@ -36,8 +34,11 @@ export function makeAnnotatedMaybeSet<
   readonly processEntry: (args: {
     readonly metadata: TMetadata;
     readonly value: TValue;
-  }) => Task<TValue, AppError>;
-}): Task<AnnotatedMaybeSet<{ metadata: TMetadata; value: TValue }>, AppError>;
+  }) => Task<TValue, AppError<AppErrorArgs & AppErrorArgs>>;
+}): Task<
+  AnnotatedMaybeSet<{ metadata: TMetadata; value: TValue }>,
+  AppError<AppErrorArgs & AppErrorArgs>
+>;
 /** Creates entries from raw keys, building each entry's Maybe via `createEntry`. */
 export function makeAnnotatedMaybeSet<
   const TKey extends string,
@@ -66,7 +67,7 @@ export function makeAnnotatedMaybeSet(
         readonly processEntry: (args: {
           readonly metadata: object;
           readonly value: object;
-        }) => Task<object, AppError>;
+        }) => Task<object, AppError<AppErrorArgs & AppErrorArgs>>;
       }
     | {
         readonly keys: ReadonlyArray<string>;
@@ -75,7 +76,10 @@ export function makeAnnotatedMaybeSet(
       },
 ):
   | AnnotatedMaybeSet<{ metadata: object; value: object }>
-  | Task<AnnotatedMaybeSet<{ metadata: object; value: object }>, AppError> {
+  | Task<
+      AnnotatedMaybeSet<{ metadata: object; value: object }>,
+      AppError<AppErrorArgs & AppErrorArgs>
+    > {
   if (Array.isArray(arg)) {
     return new Set(arg);
   }
@@ -95,14 +99,14 @@ export function makeAnnotatedMaybeSet(
     readonly processEntry: (args: {
       readonly metadata: object;
       readonly value: object;
-    }) => Task<object, AppError>;
+    }) => Task<object, AppError<AppErrorArgs & AppErrorArgs>>;
   };
 
   return [...entries]
     .reduce<
       Task<
         readonly { readonly metadata: object; readonly value: Maybe<object> }[],
-        AppError
+        AppError<AppErrorArgs & AppErrorArgs>
       >
     >(
       (chain, entry) =>

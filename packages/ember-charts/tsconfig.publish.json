@@ -5,10 +5,13 @@
  */
 {
   "extends": "@ember/library-tsconfig",
-  "include": ["./src/**/*", "./unpublished-development-types/**/*"],
+  "include": ["./src/index.ts", "./unpublished-development-types/**/*"],
   "compilerOptions": {
     "allowJs": true,
     "declarationDir": "declarations",
+    "emitDeclarationOnly": true,
+    "noEmitOnError": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
 
     /**
       https://www.typescriptlang.org/tsconfig#rootDir

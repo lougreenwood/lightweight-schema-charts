@@ -12,10 +12,7 @@
  * guards requiring "both defined." No silent skips.
  */
 
-import type {
-  GroupDiff,
-  GroupSnapshot,
-} from './types';
+import type { GroupDiff, GroupSnapshot } from './types';
 import type { GroupId, SeriesGroupState } from '../../schema/types';
 
 /**

@@ -117,7 +117,9 @@ export interface DataProviderLike {
     cursor?: DataProviderCursor;
     dataStreamIdentifier: DataStreamIdentifier;
   }): Result<
-    DataStreamUpdateBatch,
+    DataStreamUpdateBatch<
+      BaseChartDataSample<object, object, DataStreamIdentifier>
+    >,
     DataProviderNoNewDataError | DataProviderUnknownStreamError
   >;
 
@@ -131,7 +133,7 @@ export interface DataProviderLike {
   getExampleDataSampleForStream(args: {
     dataStreamIdentifier: DataStreamIdentifier;
   }): Result<
-    BaseChartDataSample,
+    BaseChartDataSample<object, object, DataStreamIdentifier>,
     DataProviderUnknownStreamError | DataStreamHasNoDataError
   >;
 
@@ -142,7 +144,10 @@ export interface DataProviderLike {
    *
    * @returns Map of stream id to sample
    */
-  getExampleDataSampleForStreams(): ReadonlyMap<string, BaseChartDataSample>;
+  getExampleDataSampleForStreams(): ReadonlyMap<
+    string,
+    BaseChartDataSample<object, object, DataStreamIdentifier>
+  >;
 
   /**
    * Plain data-state values for a stream. Consumers that derive them from models implement this here, so the schema

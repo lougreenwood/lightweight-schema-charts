@@ -21,10 +21,7 @@
 
 import type { DataProviderLike } from '../data-providers/_lib/data-provider-like';
 import type { DataStreamIdentifier } from '../data-providers/_lib/data-stream/types';
-import type {
-  DataStreamPresenterLike,
-  DataStreamPresenterLikeTArgs,
-} from '../data-stream-presenters/_lib/data-stream-presenter-like';
+import type { DataStreamPresenterLike } from '../data-stream-presenters/_lib/data-stream-presenter-like';
 import type { DataStreamPresenterFactory } from '../data-stream-presenters/_lib/data-stream-presenter-registry/types';
 import type {
   BaseStructuralDescriptor,
@@ -44,10 +41,7 @@ import type {
 } from './types';
 
 import { cached } from '@glimmer/tracking';
-import {
-  ChartLayout,
-  type ChartLayoutToggleSeriesError,
-} from './chart-layout';
+import { ChartLayout, type ChartLayoutToggleSeriesError } from './chart-layout';
 import {
   type ChartSchemaPresenterNotFoundError,
   createPresenterNotFoundError,
@@ -112,7 +106,10 @@ export class ReactiveChartSchema {
    * Reactivity flows from dataProviderMap → inline presenter creation.
    */
   @cached
-  get presenters(): ReadonlyMap<string, DataStreamPresenterLike> {
+  get presenters(): ReadonlyMap<
+    string,
+    DataStreamPresenterLike<DataProviderLike, DataStreamIdentifier>
+  > {
     return this.dataProviderMap
       .entries()
       .map(([dataStreamIdentifier, dataProvider]) => {
@@ -135,7 +132,7 @@ export class ReactiveChartSchema {
       .reduce((map, [key, presenter]) => {
         map.set(key, presenter);
         return map;
-      }, new Map<string, DataStreamPresenterLike>());
+      }, new Map<string, DataStreamPresenterLike<DataProviderLike, DataStreamIdentifier>>());
   }
 
   /**
@@ -336,16 +333,12 @@ export class ReactiveChartSchema {
    * Walks dataProviderMap to find the matching provider, creates the presenter inline. Same public surface as v1
    * ChartSchema.getPresenterForStream.
    */
-  getPresenterForStream<TDataStreamId extends DataStreamIdentifier>({
+  getPresenterForStream({
     dataStreamIdentifier,
   }: {
-    dataStreamIdentifier: TDataStreamId;
+    dataStreamIdentifier: DataStreamIdentifier;
   }): Result<
-    DataStreamPresenterLike<
-      DataStreamPresenterLikeTArgs & {
-        readonly dataStreamIdentifier?: TDataStreamId;
-      }
-    >,
+    DataStreamPresenterLike<DataProviderLike, DataStreamIdentifier>,
     ChartSchemaPresenterNotFoundError
   > {
     for (const [streamId, dataProvider] of this.dataProviderMap) {
@@ -358,13 +351,7 @@ export class ReactiveChartSchema {
           dataStreamIdentifier: streamId,
         });
 
-        return ok(
-          presenter as DataStreamPresenterLike<
-            DataStreamPresenterLikeTArgs & {
-              readonly dataStreamIdentifier?: TDataStreamId;
-            }
-          >,
-        );
+        return ok(presenter);
       }
     }
 
@@ -381,7 +368,7 @@ export class ReactiveChartSchema {
   toggleSeries({
     identifier,
   }: {
-    identifier: SeriesIdentifier;
+    identifier: SeriesIdentifier<DataStreamIdentifier>;
   }): Result<true, ChartLayoutToggleSeriesError> {
     return this.#chartLayout.toggleSeries({ identifier }).match({
       Err: (error) => err(error),
@@ -517,7 +504,7 @@ export class ReactiveChartSchema {
   #collectAllSeriesPaths({
     descriptors,
   }: {
-    descriptors: ReadonlySet<BaseStructuralDescriptor>;
+    descriptors: ReadonlySet<BaseStructuralDescriptor<DataStreamIdentifier>>;
   }): ReadonlySet<SeriesPath> {
     return descriptors.values().reduce((paths, descriptor) => {
       if (descriptor.kind === 'series') {
@@ -679,7 +666,7 @@ export class ReactiveChartSchema {
   }: {
     dataProvider: DataProviderLike;
     dataStreamIdentifier: DataStreamIdentifier;
-  }): DataStreamPresenterLike {
+  }): DataStreamPresenterLike<DataProviderLike, DataStreamIdentifier> {
     return this.#dataStreamPresenterRegistry.makeDataStreamPresenter({
       dataProvider,
       dataStreamIdentifier,
@@ -721,7 +708,7 @@ export class ReactiveChartSchema {
   #resolveSeriesFromPresenter({
     presenter,
   }: {
-    presenter: DataStreamPresenterLike;
+    presenter: DataStreamPresenterLike<DataProviderLike, DataStreamIdentifier>;
   }): ReadonlyArray<SeriesLayout> {
     const visiblePaths = presenter.defaultSeries;
     const allPaths = this.#collectAllSeriesPaths({

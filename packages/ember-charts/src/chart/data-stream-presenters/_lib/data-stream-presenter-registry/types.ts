@@ -13,5 +13,5 @@ export type DataStreamPresenterFactory = Readonly<{
   makeDataStreamPresenter(input: {
     dataProvider: DataProviderLike;
     dataStreamIdentifier: DataStreamIdentifier;
-  }): DataStreamPresenterLike;
+  }): DataStreamPresenterLike<DataProviderLike, DataStreamIdentifier>;
 }>;

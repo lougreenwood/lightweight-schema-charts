@@ -8,14 +8,17 @@ Engineering debt is listed with enough detail to act on. Product direction is li
 
 - **Dispose the chart on teardown.** The modifier removes series and panes but never calls `chart.remove()`. Add an exact-once destruction path and assert disposal rather than only DOM removal.
 - **Cancel scheduled work before disposal.** The modifier schedules DOM work after render. Ensure queued work cannot touch a destroyed chart, and cover rapid mount/unmount.
-- **Fix or remove the vendored sample sorter.** The declaration build fails in `vendor/utils-data-stream/data-sample/conditionally-sort-data-samples.ts`. Either correct it or drop the vendored copy.
+- **Prove incremental updates stay incremental.** The acceptance test asserts series identity across an update. Extend that to rebuild-triggering changes so a regression to rebuild-on-every-change still fails.
 - **Handle zero-size hosts.** `autoSize` chart creation assumes a laid-out element. Define behaviour when the host has no dimensions yet.
 
 ## Boundaries and plugins
 
-- **Remove the remaining currency dependency.** `chart/data-stream-presenters/_lib/projection-utils.ts` still reads a wrapped currency value. The adapter types and Lightweight Charts converters already take plain numbers.
-- **Introduce one conversion seam.** Let consumers register `{ structure, convert }` handlers so the package never owns currency or other value semantics. This is the seam that replaces the vendored type.
-- **Replace vendored support.** Type helpers, error constructors, and the logger are copies. Move them to package-local equivalents or an injected diagnostics port.
+- **Extend value-handler coverage.** Consumer-registered handlers now interpret unknown projected values into validated scalar/OHLC points. Cover additional value families without adding domain types to the package.
+- **Make the public declarations self-sufficient.** Emitted declarations reference `NodeJS.CallSite`; a consumer currently needs `@types/node` and `skipLibCheck`. Trace the source, remove Node types from the public declaration program, and re-run the consumer check without `skipLibCheck`.
+- **Make the export map honest.** The `./*` subpath advertises declaration paths for internal modules that declaration emit does not produce. Either emit the full graph or narrow `exports` to curated subpaths, verified with `publint`/`attw` and a deep-import consumer.
+- **Exercise the real Git install.** Prove `github:<owner>/<repo>#<sha>&path:/packages/ember-charts` through pnpm's Git fetcher, including `prepare` and the `onlyBuiltDependencies` allowlist. Keep the mounted `file:` variant only as a fallback.
+- **Finish the vendored-support decoupling.** The vendored currency file still ships even though the value-handler seam exists; error constructors and the logger remain copies. Replace them with package-local support or an injected diagnostics port.
+- **Prove the provider create-error path.** The fixture returns `never` for create failures. Use a real error type so the public base's consumer-visible failure branch is exercised.
 - **Document the plugin boundary.** Provider and presenter are the only integration surface. Make that explicit in the architecture overview, with the reference adapter as the example.
 
 ## Core extraction
@@ -33,11 +36,11 @@ Engineering debt is listed with enough detail to act on. Product direction is li
 
 ## Testing
 
-No chart tests exist to port. The suite is new work; today there is one acceptance test covering a single rendering path.
+No chart tests were ported from the application. The suite is new work: one acceptance test covers a wrapped-value candlestick path, an incremental update, custom formatting, handler-error notification, and DOM removal; unit tests cover handler dispatch, validation, and lookup failures.
 
 - **Unit.** Snapshot capture and diff precedence, including the cases that must do nothing; conversion for each series kind; projection for each point shape; layout assembly from fragments and overlay; label composition.
 - **Contract conformance.** A reusable suite that any provider and presenter can run against its own implementations, so a consumer can prove it satisfies the contract rather than discovering mismatches at runtime.
-- **Acceptance.** Mount, update, rebuild, rename, and removal; multi-pane composition; visibility toggles; rapid mount and unmount; teardown with no post-destroy callbacks.
+- **Acceptance.** The current test covers mount, one incremental update, custom formatting, handler-error notification, and DOM removal. Add rebuild and rename, failure-then-retry after a rejected value, multi-pane composition, visibility toggles, rapid mount and unmount, and teardown with no post-destroy callbacks.
 - **Lifecycle.** Assert chart disposal once implemented, not merely DOM removal.
 - **Regression.** One deterministic synthetic fixture per case, so a failure reproduces exactly.
 - **Environment.** Runs in the repository container, headless and deterministic, alongside the existing acceptance test.
@@ -46,18 +49,18 @@ No chart tests exist to port. The suite is new work; today there is one acceptan
 
 Defects present in the current implementation. Each is open until the linked work lands.
 
-| Defect | Effect | Where |
-| --- | --- | --- |
-| The chart instance is never disposed | Memory and observers retained after unmount; DOM removal hides it | `chart/modifiers/chart-lwc-adapter.ts` |
-| A series is skipped when no adapter matches its kind | The series is missing with only a log entry; no visible or programmatic signal | `chart/modifiers/chart-lwc-adapter.ts` |
-| Declarations are not emitted by the build | Consumers resolve runtime code but get no published types | `packages/ember-charts/package.json` |
-| Projection still wraps values in an internal currency type | Consumers without a currency concept must imitate it or convert twice | `chart/data-stream-presenters/_lib/projection-utils.ts` |
-| A zero-size host has no defined behaviour | `autoSize` may produce a chart with no dimensions until the element is laid out | `chart/modifiers/chart-lwc-adapter.ts` |
+| Defect                                               | Effect                                                                          | Where                                  |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------- |
+| The chart instance is never disposed                 | Memory and observers retained after unmount; DOM removal hides it               | `chart/modifiers/chart-lwc-adapter.ts` |
+| A series is skipped when no adapter matches its kind | The series is missing with only a log entry; no visible or programmatic signal  | `chart/modifiers/chart-lwc-adapter.ts` |
+| A zero-size host has no defined behaviour            | `autoSize` may produce a chart with no dimensions until the element is laid out | `chart/modifiers/chart-lwc-adapter.ts` |
 
 ## Delivery
 
-- **Emit declarations.** Publish `.d.ts` output alongside the runtime build and verify the export map resolves for both.
-- **Add CI.** Install, build, lint, typecheck, test, and format on every change.
+- **Maintain packed-consumer checks.** Declarations now build with runtime output. Continue checking a separate installed consumer, not only workspace links.
+- **Verify hosted CI.** The workflow runs install, build, lint, typecheck, test, and format; its presence alone is not evidence of a passing hosted run.
+- **Replace placeholder metadata before release.** Version is `0.0.0`, the package is private, and `repository` is empty. This is acceptable for a pinned Git dependency, not for publication.
+- **Record the lint boundary.** `src/vendor/` is excluded from lint so the gate stays meaningful for package-owned code. Revisit when vendored support is replaced.
 - **Land the test suite** described under Testing, including contract conformance for consumers.
 - **Documentation site.** Synthetic data only, covering core and Ember usage.
 
@@ -88,7 +91,7 @@ Mined from the project's chart and data-stream documentation during the document
 
 - **Framework-neutral core.** Extract the renderer from the host package and prove it without a framework binding.
 - **Additional bindings.** Each host consumes the same core contracts and owns only its scheduling and element lifecycle.
-- **Value conversion seam.** Consumer-registered handlers replace the remaining internal value types, so the package carries no currency or other domain conversion.
+- **Additional value structures.** Extend the existing consumer-registered handler seam when new scalar/OHLC structures arrive; other rendering kinds need their own contracts.
 
 ### Explicitly not in scope
 

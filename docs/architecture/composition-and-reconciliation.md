@@ -27,11 +27,11 @@ Before each reconcile, the modifier captures a snapshot per group:
 
 It then compares the previous snapshots with the current ones. The result is independent dimensions, not a single status:
 
-| Dimension | Values | Meaning |
-| --- | --- | --- |
-| `structural` | `added`, `removed`, absent | Group appeared or disappeared |
-| `dataChange` | `rebuilt`, `updated`, absent | Series must be rebuilt, or can be updated |
-| `namesChanged` | boolean | Display names changed |
+| Dimension      | Values                       | Meaning                                   |
+| -------------- | ---------------------------- | ----------------------------------------- |
+| `structural`   | `added`, `removed`, absent   | Group appeared or disappeared             |
+| `dataChange`   | `rebuilt`, `updated`, absent | Series must be rebuilt, or can be updated |
+| `namesChanged` | boolean                      | Display names changed                     |
 
 Absent means "nothing to do in this dimension". There is no separate "none" value, so a caller testing truthiness cannot mistake a no-op for a change.
 
@@ -55,11 +55,13 @@ Cases that deliberately do nothing: a cursor version change alone, a time regres
 The modifier schedules work after render, then:
 
 1. Processes removals first, so indices stay stable.
-2. Adds new groups: reuse or create the pane, create the visible series, backfill.
-3. Rebuilds changed groups: tear down the series, recreate it, backfill.
-4. Updates changed groups: fetch since the previous cursor, push to the existing series.
+2. Adds new groups: reuse or create the pane, interpret projected values, then create the visible series and backfill. A failed interpretation creates no series.
+3. Rebuilds changed groups: build the replacement first, then remove the old series and swap it in. A failed rebuild keeps the previous series.
+4. Updates changed groups: fetch since the previous cursor, interpret, and push to the existing series.
 5. Refreshes names when they changed or when pane-level labels changed.
 6. Captures fresh snapshots for the next cycle, after applying.
+
+A group whose interpretation fails is marked for backfill and retried on the next reconciliation cycle. The retry rebuilds the group from the provider; it does not leave a partial series in place.
 
 Snapshots are captured after apply because that is the state the next cycle will compare against.
 

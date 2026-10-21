@@ -4,17 +4,22 @@ A provider is the package's only source of data. One provider can expose several
 
 ## Required surface
 
-| Member | Purpose |
-| --- | --- |
-| `identifier` | Provider identity: `{ id, type }` |
-| `name` | Human-readable provider name |
-| `stableLayoutKey` | Stable key used in default group identity |
-| `dataStreamIdentifiers` | The streams this provider exposes |
-| `defaultLayout` | Where those streams should appear |
-| `getCursor` | Latest consumed point for a stream, or an error |
-| `getDataSince` | Incremental fetch after a cursor |
-| `getDataState` | Four plain values used for change detection |
-| `groupIdFor` | Stable identity for a stream's group |
+| Member                           | Purpose                                         |
+| -------------------------------- | ----------------------------------------------- |
+| `identifier`                     | Provider identity: `{ id, type }`               |
+| `name`                           | Human-readable provider name                    |
+| `stableLayoutKey`                | Stable key used in default group identity       |
+| `dataStreamIdentifiers`          | The streams this provider exposes               |
+| `defaultLayout`                  | Where those streams should appear               |
+| `getCursor`                      | Latest consumed point for a stream, or an error |
+| `getDataSince`                   | Incremental fetch after a cursor                |
+| `getDataState`                   | Four plain values used for change detection     |
+| `groupIdFor`                     | Stable identity for a stream's group            |
+| `dataSource`                     | The consumer's own underlying data source       |
+| `getExampleDataSampleForStream`  | An example sample without advancing a cursor    |
+| `getExampleDataSampleForStreams` | Example samples indexed by stream id            |
+
+The exported `AbstractDataProvider<TDataProviderStatic, TContext extends object>` implements the shared fetch/cursor behavior. A subclass explicitly supplies its static-side type and its factory-context type, and its protected `staticSide` reference; the package does not cast `this.constructor` into a consumer type. `DataProviderStatic<TDataSource, TCreateError, TContext>` keeps the factory context consumer-owned. All generic arguments are required. The complete example is `test-app/app/synthetic/synthetic-provider.ts`.
 
 ## Fetching
 

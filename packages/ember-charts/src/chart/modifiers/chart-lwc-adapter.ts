@@ -30,6 +30,7 @@
 
 import type { AnchoredPanePrimitive } from '../chart-ui/primitives/anchored-text';
 import type { DataProviderLike } from '../data-providers/_lib/data-provider-like';
+import type { DataProviderUnknownStreamError } from '../data-providers/errors';
 import type {
   BaseChartDataSample,
   DataProviderCursor,
@@ -53,6 +54,21 @@ import type {
 import type { SeriesAdapterRegistry } from '../series-adapters/_lib/_registry';
 import type { BaseSeriesOptions } from '../series-adapters/_lib/_adapter';
 import { interpretProjectedPoints } from '../series-adapters/_lib/value-handler';
+import type {
+  SeriesValueFailure,
+  SeriesValueHandler,
+} from '../series-adapters/_lib/value-handler/types';
+import type { ProjectedSeriesPoint } from '../data-stream-presenters/_lib/abstract-data-stream-presenter/types';
+import type { SeriesAdapterInternalPoint } from '../series-adapters/_lib/_adapter';
+import type { SeriesType } from '../series-adapters/_lib/_registry/types';
+import type {
+  SeriesValueNumberValidationError,
+  SeriesValueOhlcConverterMissingError,
+  SeriesValueOhlcValidationError,
+  SeriesValuePointsEmptyError,
+} from '../series-adapters/_lib/value-handler/errors';
+import type { Result } from 'true-myth/result';
+import { err, ok } from 'true-myth/result';
 import type { IChartApi, Time } from 'lightweight-charts';
 
 import { createPaneLabelPrimitive } from '../chart-ui/primitives/anchored-text';
@@ -75,12 +91,13 @@ import { createChart, TickMarkType } from 'lightweight-charts';
 interface ChartLwcAdapterModifierSignature {
   Args: {
     Named: {
+      onError?: (failure: SeriesValueFailure) => void;
       /**
        * Optional callback invoked once after the LWC chart instance is created. Receives an `applyTheme` function that
        * re-reads the current chart theme and re-applies it. Used by CanvasThemeModifier to react to OS/user theme
        * changes without coupling theme observation into this adapter.
        */
-      onReady?: (args: { applyTheme: () => void }) => void;
+      onReady?: (args: { applyTheme: () => void; chart: IChartApi }) => void;
     };
     Positional: [
       state: ChartState,
@@ -108,8 +125,15 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
       SeriesAdapterRegistry,
       ChartDomainContext,
     ],
-    { onReady }: { onReady?: (args: { applyTheme: () => void }) => void },
+    {
+      onReady,
+      onError,
+    }: {
+      onReady?: (args: { applyTheme: () => void; chart: IChartApi }) => void;
+      onError?: (failure: SeriesValueFailure) => void;
+    },
   ): void {
+    this.#onError = onError;
     // Schedule LWC DOM mutations after render
     this.#scheduleWork(() => {
       // Create chart on first call
@@ -126,7 +150,7 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
           },
         });
 
-        onReady?.({ applyTheme: this.applyTheme });
+        onReady?.({ applyTheme: this.applyTheme, chart: this.#chart });
       }
 
       this.#reconcile({
@@ -148,6 +172,7 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
    * The LWC chart instance, created on first modify() call.
    */
   #chart: IChartApi | undefined;
+  #onError: ((failure: SeriesValueFailure) => void) | undefined;
 
   /**
    * Whether the initial focus range has been applied after the first data load.
@@ -170,6 +195,12 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
    * on the next cycle.
    */
   readonly #previousSnapshots: Map<GroupId, GroupSnapshot> = new Map();
+
+  /**
+   * Groups whose value interpretation failed. They keep no partial series and are retried on the next reconciliation
+   * cycle, so a transient handler failure cannot leave a plausible but incomplete chart.
+   */
+  readonly #needsBackfill: Set<GroupId> = new Set();
 
   /**
    * Lifecycle-aware scheduler that cancels pending work on destruction.
@@ -349,10 +380,28 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
       enrichedGroup;
 
     // Fetch data (full backfill — no cursor)
-    const dataSamples = this.#fetchSamples({ dataStreamIdentifier, provider });
+    const dataSamples = this.#fetchSamples({
+      dataStreamIdentifier,
+      provider,
+    }).match({
+      Err: (error) => {
+        pinoLogger.error(
+          { error },
+          '[ChartLwcAdapter] failed to fetch samples for a new group',
+        );
+        this.#needsBackfill.add(groupId);
+        return undefined;
+      },
+      Ok: (samples) => samples,
+    });
+
+    if (dataSamples === undefined) {
+      return undefined;
+    }
 
     // Create series for each visible field
     const seriesMap = new Map<SeriesPath, ChartSeriesState>();
+    let failed = false;
 
     for (const seriesLayout of enrichedGroup.series) {
       if (!seriesLayout.visible) continue;
@@ -370,12 +419,20 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
 
       if (seriesState) {
         seriesMap.set(seriesLayout.fieldPath, seriesState);
+      } else {
+        failed = true;
       }
     }
 
-    if (seriesMap.size === 0) {
+    if (failed || seriesMap.size === 0) {
+      for (const seriesState of seriesMap.values()) {
+        this.#removeSeries({ chart, seriesApi: seriesState.seriesApi });
+      }
+      this.#needsBackfill.add(groupId);
       return undefined;
     }
+
+    this.#needsBackfill.delete(groupId);
 
     // Apply scaleMargins to the price scale via any series in this group (all share the same priceScaleId)
     if (enrichedGroup.priceScale?.scaleMargins) {
@@ -406,11 +463,13 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
     seriesAdapterRegistry,
   }: {
     chart: IChartApi;
-    dataSamples: ReadonlySet<BaseChartDataSample>;
+    dataSamples: ReadonlySet<
+      BaseChartDataSample<object, object, DataStreamIdentifier>
+    >;
     fieldPath: SeriesPath;
     groupId: GroupId;
     paneIndex: number;
-    presenter: DataStreamPresenterLike;
+    presenter: DataStreamPresenterLike<DataProviderLike, DataStreamIdentifier>;
     priceScaleId?: string;
     seriesAdapterRegistry: SeriesAdapterRegistry;
   }): ChartSeriesState | undefined {
@@ -457,38 +516,53 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
           parentDescriptor,
         });
         const seriesKey = `${groupId}::${fieldPath}`;
-        const valueHandler = seriesAdapterRegistry.getValueHandler(
-          descriptor.valueHandler,
-        );
+        return seriesAdapterRegistry
+          .getValueHandler({ id: descriptor.valueHandler })
+          .match({
+            Err: (error) => {
+              this.#reportValueFailure({ error, fieldPath, groupId });
+              return undefined;
+            },
+            Ok: (valueHandler) => {
+              const interpreted =
+                dataSamples.size === 0
+                  ? ok(new Set<SeriesAdapterInternalPoint>())
+                  : this.#interpretSeriesData({
+                      points: presenter.projectField({
+                        dataSamples,
+                        fieldPath,
+                      }),
+                      handler: valueHandler,
+                      seriesKind: descriptor.seriesKind,
+                    });
 
-        const seriesOptions: BaseSeriesOptions = { name: seriesTitle };
-        if (priceScaleId !== undefined) {
-          seriesOptions.priceScaleId = priceScaleId;
-        }
-        if (valueHandler?.formatNumber !== undefined) {
-          seriesOptions.priceFormat = {
-            type: 'custom',
-            formatter: valueHandler.formatNumber,
-          };
-        }
+              return interpreted.match({
+                Err: (error) => {
+                  this.#reportValueFailure({ error, fieldPath, groupId });
+                  return undefined;
+                },
+                Ok: (data) => {
+                  const seriesOptions: BaseSeriesOptions = {
+                    name: seriesTitle,
+                  };
+                  if (priceScaleId !== undefined)
+                    seriesOptions.priceScaleId = priceScaleId;
+                  if (valueHandler.priceFormat !== undefined)
+                    seriesOptions.priceFormat = valueHandler.priceFormat;
 
-        const { seriesApi } = adapter.createSeries({
-          context: { chart, paneIndex, seriesKey },
-          options: seriesOptions,
-        });
+                  const { seriesApi } = adapter.createSeries({
+                    context: { chart, paneIndex, seriesKey },
+                    options: seriesOptions,
+                  });
 
-        // Backfill with initial data
-        if (dataSamples.size > 0) {
-          adapter.backfillSeries({
-            data: interpretProjectedPoints({
-              points: presenter.projectField({ dataSamples, fieldPath }),
-              handler: valueHandler,
-            }),
-            seriesApi,
+                  if (data.size > 0) {
+                    adapter.backfillSeries({ data, seriesApi });
+                  }
+                  return { adapter, seriesApi };
+                },
+              });
+            },
           });
-        }
-
-        return { adapter, seriesApi };
       },
     });
   }
@@ -507,7 +581,10 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
     cursor?: DataProviderCursor;
     dataStreamIdentifier: DataStreamIdentifier;
     provider: DataProviderLike;
-  }): ReadonlySet<BaseChartDataSample> {
+  }): Result<
+    ReadonlySet<BaseChartDataSample<object, object, DataStreamIdentifier>>,
+    DataProviderUnknownStreamError
+  > {
     const dataResult = provider.getDataSince({
       cursor,
       dataStreamIdentifier,
@@ -515,22 +592,25 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
 
     return dataResult.match({
       Err: (error) => {
-        if (error.errorCode !== 'DATA_PROVIDER_NO_NEW_DATA') {
-          pinoLogger.error(
-            { error },
-            '[ChartLwcAdapter] failed to fetch samples',
+        if (error.errorCode === 'DATA_PROVIDER_NO_NEW_DATA') {
+          return ok(
+            new Set<
+              BaseChartDataSample<object, object, DataStreamIdentifier>
+            >(),
           );
         }
-        return new Set<BaseChartDataSample>();
+        return err(error);
       },
       Ok: (batch) => {
         const samples = batch.updates
           .values()
           .reduce(
             (accumulated, update) => accumulated.add(update.data),
-            new Set<BaseChartDataSample>(),
+            new Set<
+              BaseChartDataSample<object, object, DataStreamIdentifier>
+            >(),
           );
-        return samples;
+        return ok(samples);
       },
     });
   }
@@ -606,12 +686,8 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
       const existingGroup = paneState.seriesGroups.get(groupId);
       if (!existingGroup) continue;
 
-      // Tear down existing series
-      for (const [, seriesState] of existingGroup.series) {
-        this.#removeSeries({ chart, seriesApi: seriesState.seriesApi });
-      }
-
-      // Rebuild with full backfill
+      // Build the replacement first, then remove the old series only on success. A failed interpretation must not
+      // discard previously rendered history.
       const newGroupState = this.#buildSeriesGroup({
         chart,
         enrichedGroup,
@@ -619,13 +695,15 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
         seriesAdapterRegistry,
       });
 
-      // Always keep the group in the pane — even when buildSeriesGroup returns undefined (data not yet
-      // available). An empty placeholder prevents the group from becoming a permanent orphan: it stays
-      // addressable in #paneStates so the next reconciliation cycle can rebuild it when data arrives.
-      paneState.seriesGroups.set(
-        groupId,
-        newGroupState ?? { series: new Map() },
-      );
+      if (newGroupState === undefined) {
+        break;
+      }
+
+      for (const [, seriesState] of existingGroup.series) {
+        this.#removeSeries({ chart, seriesApi: seriesState.seriesApi });
+      }
+
+      paneState.seriesGroups.set(groupId, newGroupState);
 
       break;
     }
@@ -655,6 +733,41 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
       currentGroups,
       previousSnapshots: this.#previousSnapshots,
     });
+
+    // Retry groups whose previous value interpretation failed. Groups that are structurally added below are skipped;
+    // this loop handles a failed earlier add or rebuild without duplicating Phase 1.
+    const retriedGroups = new Set<GroupId>();
+    for (const groupId of this.#needsBackfill.values().toArray()) {
+      if (diffs.get(groupId)?.structural === 'added') continue;
+      const enrichedGroup = currentGroups.get(groupId);
+      if (!enrichedGroup) {
+        this.#needsBackfill.delete(groupId);
+        continue;
+      }
+
+      const hasPane = this.#paneStates
+        .values()
+        .some((paneState) => paneState.seriesGroups.has(groupId));
+
+      if (hasPane) {
+        this.#rebuildGroupData({
+          chart,
+          enrichedGroup,
+          groupId,
+          seriesAdapterRegistry,
+        });
+      } else {
+        this.#addGroup({
+          chart,
+          domainContext,
+          enrichedGroup,
+          groupId,
+          seriesAdapterRegistry,
+          state,
+        });
+      }
+      retriedGroups.add(groupId);
+    }
 
     // Phase 1 — Structural: removals first (avoids index confusion), then additions
     for (const [groupId, diff] of diffs) {
@@ -692,6 +805,7 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
     // Phase 2 — Data: process changes for groups that exist in both previous and current
     for (const [groupId, diff] of diffs) {
       if (diff.structural) continue; // Already handled in Phase 1
+      if (retriedGroups.has(groupId)) continue;
 
       const enrichedGroup = currentGroups.get(groupId);
       if (!enrichedGroup) continue;
@@ -877,9 +991,19 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
       cursor: previousCursor,
       dataStreamIdentifier,
       provider,
+    }).match({
+      Err: (error) => {
+        pinoLogger.error(
+          { error },
+          '[ChartLwcAdapter] failed to fetch samples for an update',
+        );
+        this.#needsBackfill.add(groupId);
+        return undefined;
+      },
+      Ok: (samples) => samples,
     });
 
-    if (dataSamples.size === 0) return;
+    if (dataSamples === undefined || dataSamples.size === 0) return;
 
     // Find the adapter group state for this group
     const adapterGroupState = this.#findAdapterGroupState({ groupId });
@@ -896,36 +1020,89 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
         descriptors: presenter.structuralDescriptors,
         fieldPath: seriesState.fieldPath,
       });
-      const valueHandler =
-        found !== undefined &&
-        isCompleteLeafStructuralDescriptor(found.descriptor)
-          ? seriesAdapterRegistry.getValueHandler(found.descriptor.valueHandler)
-          : undefined;
-
-      const projectedData = interpretProjectedPoints({
-        points: presenter.projectField({
-          dataSamples,
-          fieldPath: seriesState.fieldPath,
-        }),
-        handler: valueHandler,
+      if (
+        found === undefined ||
+        !isCompleteLeafStructuralDescriptor(found.descriptor)
+      )
+        continue;
+      const fieldDescriptor = found.descriptor;
+      const handlerResult = seriesAdapterRegistry.getValueHandler({
+        id: fieldDescriptor.valueHandler,
       });
-
-      const incrementalProjectedData =
-        previousCursor === undefined
-          ? projectedData
-          : new Set(
-              projectedData
-                .values()
-                .filter((point) => point.time.getTime() >= previousCursor.time),
-            );
-
-      if (incrementalProjectedData.size > 0) {
-        cachedSeries.adapter.updateSeries({
-          data: incrementalProjectedData,
-          seriesApi: cachedSeries.seriesApi,
-        });
-      }
+      handlerResult.match({
+        Err: (error) => {
+          this.#reportValueFailure({
+            error,
+            fieldPath: seriesState.fieldPath,
+            groupId,
+          });
+          this.#needsBackfill.add(groupId);
+        },
+        Ok: (handler) =>
+          this.#interpretSeriesData({
+            points: presenter.projectField({
+              dataSamples,
+              fieldPath: seriesState.fieldPath,
+            }),
+            handler,
+            seriesKind: fieldDescriptor.seriesKind,
+          }).match({
+            Err: (error) => {
+              this.#reportValueFailure({
+                error,
+                fieldPath: seriesState.fieldPath,
+                groupId,
+              });
+              this.#needsBackfill.add(groupId);
+            },
+            Ok: (projectedData) => {
+              const incrementalProjectedData =
+                previousCursor === undefined
+                  ? projectedData
+                  : new Set(
+                      projectedData
+                        .values()
+                        .filter(
+                          (point) =>
+                            point.time.getTime() >= previousCursor.time,
+                        ),
+                    );
+              if (incrementalProjectedData.size > 0) {
+                cachedSeries.adapter.updateSeries({
+                  data: incrementalProjectedData,
+                  seriesApi: cachedSeries.seriesApi,
+                });
+              }
+            },
+          }),
+      });
     }
+  }
+
+  #interpretSeriesData({
+    points,
+    handler,
+    seriesKind,
+  }: {
+    points: ReadonlySet<ProjectedSeriesPoint>;
+    handler: SeriesValueHandler;
+    seriesKind: SeriesType;
+  }): Result<
+    ReadonlySet<SeriesAdapterInternalPoint>,
+    | SeriesValueNumberValidationError
+    | SeriesValueOhlcValidationError
+    | SeriesValueOhlcConverterMissingError
+    | SeriesValuePointsEmptyError
+  > {
+    return interpretProjectedPoints({ points, handler, seriesKind });
+  }
+
+  #reportValueFailure({ error, fieldPath, groupId }: SeriesValueFailure): void {
+    pinoLogger.error(
+      { error, fieldPath, groupId },
+      '[ChartLwcAdapter] series value interpretation failed',
+    );
+    this.#onError?.({ error, fieldPath, groupId });
   }
 
   /**

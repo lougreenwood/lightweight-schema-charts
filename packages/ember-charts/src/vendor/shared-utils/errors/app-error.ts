@@ -31,25 +31,29 @@ export type GenericErrorInstance<
     meta?: object | undefined;
     type: string;
   },
-> = AppError<{
-  errorCode: TOpts['errorCode'];
-  errorGroup?: TOpts['errorGroup'];
-  meta?: TOpts['meta'];
-  type: TOpts['type'];
-}>;
+> = AppError<
+  {
+    errorCode: TOpts['errorCode'];
+    errorGroup?: TOpts['errorGroup'];
+    meta?: TOpts['meta'];
+    type: TOpts['type'];
+  } & AppErrorArgs & {
+      errorCode: TOpts['errorCode'];
+      errorGroup?: TOpts['errorGroup'];
+      meta?: TOpts['meta'];
+      type: TOpts['type'];
+    }
+>;
 
-export abstract class AppError<
-  const TArgsInput extends Partial<AppErrorArgs> = Partial<AppErrorArgs>,
-  const _TArgs extends AppErrorArgs = AppErrorArgs & TArgsInput,
->
+export abstract class AppError<const TErrorArgs extends AppErrorArgs>
   extends Error
   implements AppErrorLike
 {
-  readonly errorCode: _TArgs['errorCode'];
-  readonly errorGroup: _TArgs['errorGroup'];
-  readonly meta: _TArgs['meta'];
+  readonly errorCode: TErrorArgs['errorCode'];
+  readonly errorGroup: TErrorArgs['errorGroup'];
+  readonly meta: TErrorArgs['meta'];
   readonly severity: LogSeverity;
-  readonly type: _TArgs['type'];
+  readonly type: TErrorArgs['type'];
 
   override get name(): string {
     const baseName = this.constructor.name;
@@ -63,20 +67,20 @@ export abstract class AppError<
           cause?: unknown;
           context?: MaybeHasLogger;
           emitLog: boolean;
-          errorCode: _TArgs['errorCode'];
-          errorGroup: _TArgs['errorGroup'];
+          errorCode: TErrorArgs['errorCode'];
+          errorGroup: TErrorArgs['errorGroup'];
           message: string;
-          meta: _TArgs['meta'];
+          meta: TErrorArgs['meta'];
           severity: LogSeverity;
-          type: _TArgs['type'];
+          type: TErrorArgs['type'];
         },
     options?: AppErrorOptions & {
       emitLog: boolean;
-      errorCode: _TArgs['errorCode'];
-      errorGroup: _TArgs['errorGroup'];
-      meta: _TArgs['meta'];
+      errorCode: TErrorArgs['errorCode'];
+      errorGroup: TErrorArgs['errorGroup'];
+      meta: TErrorArgs['meta'];
       severity: LogSeverity;
-      type: _TArgs['type'];
+      type: TErrorArgs['type'];
     },
   ) {
     const normalized =
@@ -85,12 +89,12 @@ export abstract class AppError<
             cause: options?.cause,
             context: options?.context,
             emitLog: options?.emitLog ?? false,
-            errorCode: options?.errorCode as _TArgs['errorCode'],
+            errorCode: options?.errorCode as TErrorArgs['errorCode'],
             errorGroup: options?.errorGroup,
             message: messageOrOptions,
             meta: options?.meta,
             severity: options?.severity ?? ('error' as const),
-            type: options?.type as _TArgs['type'],
+            type: options?.type as TErrorArgs['type'],
           }
         : messageOrOptions;
 
@@ -160,8 +164,7 @@ export function createAppError<const TType extends string>({
   type ThisType = TType;
 
   return class<
-    const TErrorArgs extends GenericErrorArgs & Partial<AppErrorArgs> =
-      GenericErrorArgs & Partial<AppErrorArgs>,
+    const TErrorArgs extends GenericErrorArgs & Partial<AppErrorArgs>,
   > extends AppError<AppErrorArgs & TErrorArgs> {
     static {
       Object.defineProperty(this, 'name', {
@@ -175,8 +178,8 @@ export function createAppError<const TType extends string>({
     static of<
       const TErrorCode extends string,
       const TMessage extends string,
-      const TMeta extends object | undefined = undefined,
-      const TErrorGroup extends string | undefined = undefined,
+      const TMeta extends object | undefined,
+      const TErrorGroup extends string | undefined,
     >(options: {
       cause?: unknown;
       context?: MaybeHasLogger;

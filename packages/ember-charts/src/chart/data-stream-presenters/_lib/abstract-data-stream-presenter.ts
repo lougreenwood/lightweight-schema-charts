@@ -1,16 +1,13 @@
 import type { BaseChartDataSample } from '../../data-providers/_lib/data-stream/types';
-import type { AbstractDataStreamPresenterTArgs } from './abstract-data-stream-presenter/types';
+import type { DataProviderLike } from '../../data-providers/_lib/data-provider-like';
+import type { DataStreamIdentifier } from '../../data-providers/_lib/data-stream/types';
 import type {
   ChartLayoutFragmentData,
   BaseStructuralDescriptor,
   SeriesPath,
 } from '../../schema/types';
-import type { SeriesAdapterInternalPoint } from '../../series-adapters/_lib/_adapter';
+import type { ProjectedSeriesPoint } from './abstract-data-stream-presenter/types';
 import type { SeriesType } from '../../series-adapters/_lib/_registry/types';
-import type {
-  GetArg,
-  UseArgs,
-} from '../../../vendor/shared-utils/type-utils/resolve-args';
 import type { Result } from 'true-myth/result';
 
 import { trackedMap } from '@ember/reactive/collections';
@@ -48,27 +45,24 @@ import { humanizeChartFieldLabel } from '../../utils/labels';
  * discriminated union. The abstract class does not implement DataStreamPresenterLike directly (TypeScript cannot
  * implement union types), but concrete subclasses must satisfy one branch of the union.
  *
- * @template TA - Structured generic object for type parameters. Includes:
- *
- *   - `dataProvider` - The data provider instance
- *   - `dataStreamIdentifier` - The stream identifier
- *   - `dataSource` - The data source type (determines configurability)
+ * Consumer types are preserved directly through the provider, stream, and data-source parameters.
  */
 export abstract class AbstractDataStreamPresenter<
-  TA extends AbstractDataStreamPresenterTArgs =
-    AbstractDataStreamPresenterTArgs,
+  TDataProvider extends DataProviderLike,
+  TDataStreamIdentifier extends DataStreamIdentifier,
+  TDataSource,
 > {
   /**
    * The data provider instance that owns this presenter's data stream.
    */
-  get dataProvider(): GetArg<TA, 'dataProvider'> {
+  get dataProvider(): TDataProvider {
     return this._dataProvider;
   }
 
   /**
    * The data stream identifier for this presenter.
    */
-  get dataStreamIdentifier(): GetArg<TA, 'dataStreamIdentifier'> {
+  get dataStreamIdentifier(): TDataStreamIdentifier {
     return this._dataStreamIdentifier;
   }
 
@@ -80,9 +74,7 @@ export abstract class AbstractDataStreamPresenter<
     const rootDescriptors = this.structuralDescriptors;
     const selections = new Set<SeriesPath>();
 
-    type Descriptor = BaseStructuralDescriptor<
-      GetArg<TA, 'dataStreamIdentifier'>
-    >;
+    type Descriptor = BaseStructuralDescriptor<TDataStreamIdentifier>;
 
     const isSeries = (d: Descriptor): d is Descriptor & { kind: 'series' } =>
       d.kind === 'series';
@@ -200,7 +192,7 @@ export abstract class AbstractDataStreamPresenter<
    * The generic type parameter preserves the specific DataStreamIdentifier type from the presenter's TArgs.
    */
   get structuralDescriptors(): ReadonlySet<
-    BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>
+    BaseStructuralDescriptor<TDataStreamIdentifier>
   > {
     const allDescriptors = Array.from(this._structuralDescriptorsMap.values());
 
@@ -212,7 +204,7 @@ export abstract class AbstractDataStreamPresenter<
         // Recursively collect all children field paths
         const collectChildPaths = (
           children: ReadonlySet<
-            BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>
+            BaseStructuralDescriptor<TDataStreamIdentifier>
           >,
         ) => {
           for (const child of children) {
@@ -243,8 +235,8 @@ export abstract class AbstractDataStreamPresenter<
     dataProvider,
     dataStreamIdentifier,
   }: {
-    dataProvider: UseArgs<TA>['dataProvider'];
-    dataStreamIdentifier: UseArgs<TA>['dataStreamIdentifier'];
+    dataProvider: TDataProvider;
+    dataStreamIdentifier: TDataStreamIdentifier;
   }) {
     this._dataProvider = dataProvider;
     this._dataStreamIdentifier = dataStreamIdentifier;
@@ -274,7 +266,7 @@ export abstract class AbstractDataStreamPresenter<
    * The generic type parameter preserves the specific DataStreamIdentifier type from the presenter's TArgs.
    */
   describeFields(): ReadonlySet<
-    BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>
+    BaseStructuralDescriptor<TDataStreamIdentifier>
   > {
     // 1. Get data fields from subclass
     const dataFields = this._describeDataFields();
@@ -309,9 +301,7 @@ export abstract class AbstractDataStreamPresenter<
     }
 
     // 7. Wrap meta children in structural "Meta" node
-    const metaStructural: BaseStructuralDescriptor<
-      GetArg<TA, 'dataStreamIdentifier'>
-    > = {
+    const metaStructural: BaseStructuralDescriptor<TDataStreamIdentifier> = {
       children: allMetaChildren,
       kind: 'structural' as const,
       label: 'Meta',
@@ -325,7 +315,7 @@ export abstract class AbstractDataStreamPresenter<
     // 8. Return combined data + wrapped meta, with data fields first so primary
     // stream series appear before auxiliary Meta fields in selector/tree UIs.
     const orderedDescriptors = new Set<
-      BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>
+      BaseStructuralDescriptor<TDataStreamIdentifier>
     >(dataFields);
     orderedDescriptors.add(metaStructural);
     return orderedDescriptors;
@@ -341,37 +331,43 @@ export abstract class AbstractDataStreamPresenter<
    *
    * The `isConfigurable` discriminator enables type narrowing at the interface level.
    */
-  abstract getStreamDataSource(): Result<unknown, never>;
+  abstract getStreamDataSource(): Result<TDataSource, never>;
 
-  projectField<TProjectedData extends SeriesAdapterInternalPoint>({
+  projectField({
     dataSamples,
     fieldPath,
   }: {
-    dataSamples: ReadonlySet<BaseChartDataSample>;
+    dataSamples: ReadonlySet<
+      BaseChartDataSample<object, object, DataStreamIdentifier>
+    >;
     fieldPath: SeriesPath;
-  }): ReadonlySet<TProjectedData> {
+  }): ReadonlySet<ProjectedSeriesPoint> {
     // Delegate to subclass hook for actual projection
     // No descriptor enrichment during projection (YAGNI - descriptors are fully seeded at construction)
     return this._projectFieldImplementation({
       dataSamples,
       fieldPath,
-    }) as ReadonlySet<TProjectedData>;
+    });
   }
 
   /**
    * Protected data provider for subclasses.
    */
-  protected readonly _dataProvider: UseArgs<TA>['dataProvider'];
+  protected readonly _dataProvider: TDataProvider;
 
   /**
    * Protected stream identifier for subclasses.
    */
-  protected readonly _dataStreamIdentifier: UseArgs<TA>['dataStreamIdentifier'];
+  protected readonly _dataStreamIdentifier: TDataStreamIdentifier;
 
   /**
    * Protected example data sample for descriptor inference (if available).
    */
-  protected readonly _exampleDataSample?: BaseChartDataSample;
+  protected readonly _exampleDataSample?: BaseChartDataSample<
+    object,
+    object,
+    DataStreamIdentifier
+  >;
 
   /**
    * Tracked cache keyed by fieldPath for efficient lookups and UI reactivity. We store BOTH structural and series
@@ -379,7 +375,7 @@ export abstract class AbstractDataStreamPresenter<
    */
   private readonly _structuralDescriptorsMap = trackedMap<
     SeriesPath,
-    BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>
+    BaseStructuralDescriptor<TDataStreamIdentifier>
   >();
 
   /**
@@ -389,7 +385,7 @@ export abstract class AbstractDataStreamPresenter<
    * without additional processing.
    */
   protected abstract _describeDataFields(): ReadonlySet<
-    BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>
+    BaseStructuralDescriptor<TDataStreamIdentifier>
   >;
 
   /**
@@ -403,7 +399,7 @@ export abstract class AbstractDataStreamPresenter<
    * Return an empty set if this stream has no meta fields.
    */
   protected abstract _describeMetaFieldChildren(): ReadonlySet<
-    BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>
+    BaseStructuralDescriptor<TDataStreamIdentifier>
   >;
 
   /**
@@ -482,9 +478,7 @@ export abstract class AbstractDataStreamPresenter<
   protected _mergeDescriptorsIntoCache({
     descriptors,
   }: {
-    descriptors: ReadonlySet<
-      BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>
-    >;
+    descriptors: ReadonlySet<BaseStructuralDescriptor<TDataStreamIdentifier>>;
   }): void {
     for (const descriptor of descriptors) {
       this._structuralDescriptorsMap.set(
@@ -502,9 +496,11 @@ export abstract class AbstractDataStreamPresenter<
    * Subclass hook for projection. Implementors should project the requested field using the provided samples.
    */
   protected abstract _projectFieldImplementation(args: {
-    dataSamples: ReadonlySet<BaseChartDataSample>;
+    dataSamples: ReadonlySet<
+      BaseChartDataSample<object, object, DataStreamIdentifier>
+    >;
     fieldPath: SeriesPath;
-  }): ReadonlySet<SeriesAdapterInternalPoint>;
+  }): ReadonlySet<ProjectedSeriesPoint>;
 
   /**
    * Strip 'is' prefix from field names for boolean fields.
@@ -535,7 +531,7 @@ export abstract class AbstractDataStreamPresenter<
     descriptor,
     paths,
   }: {
-    descriptor: BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>;
+    descriptor: BaseStructuralDescriptor<TDataStreamIdentifier>;
     paths: Set<string>;
   }): void {
     paths.add(descriptor.identifier.fieldPath);
@@ -563,9 +559,7 @@ export abstract class AbstractDataStreamPresenter<
     depth?: number;
     metaObject: Record<string, unknown>;
     pathPrefix: string;
-  }): ReadonlySet<
-    BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>
-  > {
+  }): ReadonlySet<BaseStructuralDescriptor<TDataStreamIdentifier>> {
     // Safety: limit recursion depth
     if (depth > 10) {
       return new Set();
@@ -627,7 +621,7 @@ export abstract class AbstractDataStreamPresenter<
           fieldPath,
         },
       });
-    }, new Set<BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>>());
+    }, new Set<BaseStructuralDescriptor<TDataStreamIdentifier>>());
   }
 
   /**
@@ -638,9 +632,7 @@ export abstract class AbstractDataStreamPresenter<
   #collectAllSeriesPaths({
     descriptors,
   }: {
-    descriptors: ReadonlySet<
-      BaseStructuralDescriptor<GetArg<TA, 'dataStreamIdentifier'>>
-    >;
+    descriptors: ReadonlySet<BaseStructuralDescriptor<TDataStreamIdentifier>>;
   }): Set<SeriesPath> {
     return descriptors.values().reduce((paths, descriptor) => {
       if (descriptor.kind === 'series') {

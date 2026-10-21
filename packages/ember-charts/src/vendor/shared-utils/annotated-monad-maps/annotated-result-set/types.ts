@@ -1,8 +1,9 @@
+import type { AppErrorArgs } from '../../errors/app-error';
 import type { AppError } from '../../errors/app-error';
 import type { Result } from 'true-myth';
 
 export interface AnnotatedResultSetOpts {
-  readonly error: AppError;
+  readonly error: AppError<AppErrorArgs & AppErrorArgs>;
   readonly metadata: object;
   readonly success: unknown;
 }

@@ -1,8 +1,5 @@
 import type { FilterValueFor } from './filter-value/types';
-import type {
-  FilterFieldType,
-  FilterOperator,
-} from './types';
+import type { FilterFieldType, FilterOperator } from './types';
 
 export function decodeFilterValue<F extends FilterFieldType>({
   fieldType,

@@ -25,10 +25,7 @@
  * - Severity?: LogSeverity
  */
 
-import type {
-  HasLogger,
-  LogSeverity,
-} from '../../logger/types';
+import type { HasLogger, LogSeverity } from '../../logger/types';
 import type {
   Http4xxClientError,
   Http5xxServerError,

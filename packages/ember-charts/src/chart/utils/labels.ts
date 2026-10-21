@@ -12,10 +12,7 @@
  */
 
 import type { DataStreamIdentifier } from '../data-providers/_lib/data-stream/types';
-import type {
-  BaseStructuralDescriptor,
-  SeriesPath,
-} from '../schema/types';
+import type { BaseStructuralDescriptor, SeriesPath } from '../schema/types';
 
 import { isBranchStructuralDescriptor } from '../schema/utils';
 import startCase from 'lodash-es/startCase';
@@ -29,7 +26,7 @@ export interface BuildPaneLabelArgs {
   /**
    * First series field descriptor in the pane
    */
-  fieldDescriptor: BaseStructuralDescriptor;
+  fieldDescriptor: BaseStructuralDescriptor<DataStreamIdentifier>;
 
   /**
    * Whether this is the first pane in the chart
@@ -39,7 +36,7 @@ export interface BuildPaneLabelArgs {
   /**
    * Parent field descriptor if this is a child field
    */
-  parentDescriptor?: BaseStructuralDescriptor;
+  parentDescriptor?: BaseStructuralDescriptor<DataStreamIdentifier>;
 
   /**
    * Human-readable provider name
@@ -71,12 +68,12 @@ export interface BuildSeriesLabelArgs {
   /**
    * Field descriptor for this series
    */
-  fieldDescriptor: BaseStructuralDescriptor;
+  fieldDescriptor: BaseStructuralDescriptor<DataStreamIdentifier>;
 
   /**
    * Parent field descriptor if this is a child field
    */
-  parentDescriptor?: BaseStructuralDescriptor;
+  parentDescriptor?: BaseStructuralDescriptor<DataStreamIdentifier>;
 
   /**
    * Human-readable provider name (e.g., "MarketDataData", "MyStrategy")
@@ -98,12 +95,12 @@ export interface BuildSeriesTitleArgs {
   /**
    * Field descriptor for this series
    */
-  fieldDescriptor: BaseStructuralDescriptor;
+  fieldDescriptor: BaseStructuralDescriptor<DataStreamIdentifier>;
 
   /**
    * Parent field descriptor if this is a child field
    */
-  parentDescriptor?: BaseStructuralDescriptor;
+  parentDescriptor?: BaseStructuralDescriptor<DataStreamIdentifier>;
 }
 
 /**

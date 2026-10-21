@@ -1,3 +1,4 @@
+import type { AppErrorArgs } from '../../errors/app-error';
 import type { AppError } from '../../errors/app-error';
 import type { Task } from 'true-myth';
 
@@ -9,7 +10,7 @@ import type { Task } from 'true-myth';
  * @template error - Task error type (must extend AppError)
  */
 export interface AnnotatedTaskMapOpts {
-  readonly error: AppError;
+  readonly error: AppError<AppErrorArgs & AppErrorArgs>;
   readonly metadata: object;
   readonly success: unknown;
 }

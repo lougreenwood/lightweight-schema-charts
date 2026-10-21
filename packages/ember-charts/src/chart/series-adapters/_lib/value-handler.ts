@@ -1,68 +1,142 @@
-/**
- * Series value interpretation.
- *
- * A presenter may project any value shape: a number, a domain object, or a composite. The chart cannot read those
- * shapes, so it asks a registered handler to interpret them into series primitives. The package never imports the
- * consumer's value types.
- */
+import type { ProjectedSeriesPoint } from '../../data-stream-presenters/_lib/abstract-data-stream-presenter/types';
+import type { SeriesAdapterInternalPoint } from './_adapter';
+import type { SeriesType } from './_registry/types';
+import type {
+  SeriesValueNumberValidationError,
+  SeriesValueOhlcConverterMissingError,
+  SeriesValueOhlcValidationError,
+  SeriesValuePointsEmptyError,
+} from './value-handler/errors';
+import type {
+  InterpretedOhlc,
+  SeriesValueHandler,
+} from './value-handler/types';
 
-export type InterpretedOhlc = Readonly<{
-  close: number;
-  high: number;
-  low: number;
-  open: number;
-}>;
+import { EmptyResultError } from '../../../vendor/shared-utils/errors/empty-result-error';
+import { PreconditionError } from '../../../vendor/shared-utils/errors/precondition-error';
+import { ValidationError } from '../../../vendor/shared-utils/errors/validation-error';
+import { all, err, ok, type Result } from 'true-myth/result';
 
-export interface SeriesValueHandler {
-  /** Stable identifier used by descriptors. */
-  readonly id: string;
-
-  /** Interpret an arbitrary value as a number for scalar series. */
-  toNumber(value: unknown): number;
-
-  /** Interpret an arbitrary value as OHLC for candlestick series. */
-  toOhlc?(value: unknown): InterpretedOhlc;
-
-  /** Format a numeric price for the axis and crosshair. */
-  formatNumber?(value: number): string;
-}
-
-export type SeriesValueHandlers = Readonly<Record<string, SeriesValueHandler>>;
-
-/**
- * Apply a handler to projected points. Without a handler the points pass through unchanged, which is correct for
- * plain numeric or OHLC values.
- *
- * The cast at the boundary is deliberate: the handler guarantees the interpreted shape matches the adapter's expected
- * point type, and the adapter validates nothing further.
- */
-export function interpretProjectedPoints<
-  TPoint extends Readonly<{ time: Date; value: unknown }>,
->({
-  points,
-  handler,
-}: {
-  points: ReadonlySet<TPoint>;
-  handler: SeriesValueHandler | undefined;
-}): ReadonlySet<TPoint> {
-  if (handler === undefined) {
-    return points;
-  }
-
-  return new Set(
-    points.values().map((point) => {
-      const value = point.value;
-      const isOhlc =
-        handler.toOhlc !== undefined &&
-        typeof value === 'object' &&
-        value !== null &&
-        'open' in value;
-
-      const interpreted = isOhlc
-        ? handler.toOhlc?.(value)
-        : handler.toNumber(value);
-
-      return { ...point, value: interpreted } as TPoint;
+export function validateSeriesNumber(
+  value: unknown,
+): Result<number, SeriesValueNumberValidationError> {
+  if (isFiniteNumber(value)) return ok(value);
+  return err(
+    ValidationError.of({
+      errorCode: 'SERIES_VALUE_NUMBER_INVALID',
+      message: 'A scalar series value must be a finite number.',
+      emitLog: false,
     }),
   );
+}
+
+export function validateSeriesOhlc(
+  value: unknown,
+): Result<InterpretedOhlc, SeriesValueOhlcValidationError> {
+  if (
+    value &&
+    typeof value === 'object' &&
+    'open' in value &&
+    isFiniteNumber(value.open) &&
+    'high' in value &&
+    isFiniteNumber(value.high) &&
+    'low' in value &&
+    isFiniteNumber(value.low) &&
+    'close' in value &&
+    isFiniteNumber(value.close)
+  ) {
+    return ok({
+      open: value.open,
+      high: value.high,
+      low: value.low,
+      close: value.close,
+    });
+  }
+  return err(
+    ValidationError.of({
+      errorCode: 'SERIES_VALUE_OHLC_INVALID',
+      message: 'An OHLC series value must contain four finite numbers.',
+      emitLog: false,
+    }),
+  );
+}
+
+/** The default validates numeric values; it never unwraps consumer domain objects. */
+export const numericSeriesValueHandler: SeriesValueHandler = {
+  id: 'numeric',
+  toNumber: validateSeriesNumber,
+  toOhlc: validateSeriesOhlc,
+};
+
+/** Interpret a non-empty batch before mutating an upstream series. */
+export function interpretProjectedPoints({
+  points,
+  handler,
+  seriesKind,
+}: {
+  points: ReadonlySet<ProjectedSeriesPoint>;
+  handler: SeriesValueHandler;
+  seriesKind: SeriesType;
+}): Result<
+  ReadonlySet<SeriesAdapterInternalPoint>,
+  | SeriesValueNumberValidationError
+  | SeriesValueOhlcValidationError
+  | SeriesValueOhlcConverterMissingError
+  | SeriesValuePointsEmptyError
+> {
+  if (points.size === 0) {
+    return err(
+      EmptyResultError.of({
+        errorCode: 'SERIES_VALUE_POINTS_EMPTY',
+        message: 'There are no projected points to interpret.',
+        emitLog: false,
+      }),
+    );
+  }
+  return all(
+    points
+      .values()
+      .map((point) => interpretProjectedPoint({ point, handler, seriesKind }))
+      .toArray(),
+  ).map((interpreted) => new Set(interpreted));
+}
+
+function interpretProjectedPoint({
+  point,
+  handler,
+  seriesKind,
+}: {
+  point: ProjectedSeriesPoint;
+  handler: SeriesValueHandler;
+  seriesKind: SeriesType;
+}): Result<
+  SeriesAdapterInternalPoint,
+  | SeriesValueNumberValidationError
+  | SeriesValueOhlcValidationError
+  | SeriesValueOhlcConverterMissingError
+> {
+  if (seriesKind === 'bar' || seriesKind === 'candlestick') {
+    if (handler.toOhlc === undefined) {
+      return err(
+        PreconditionError.of({
+          errorCode: 'SERIES_VALUE_OHLC_CONVERTER_MISSING',
+          message: 'The selected value handler does not support OHLC series.',
+          meta: { handlerId: handler.id },
+          emitLog: false,
+        }),
+      );
+    }
+    return handler
+      .toOhlc(point.value)
+      .andThen(validateSeriesOhlc)
+      .map((value) => ({ time: point.time, value }));
+  }
+  return handler
+    .toNumber(point.value)
+    .andThen(validateSeriesNumber)
+    .map((value) => ({ time: point.time, value }));
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
 }

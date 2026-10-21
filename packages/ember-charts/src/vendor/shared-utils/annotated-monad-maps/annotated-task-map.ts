@@ -1,12 +1,10 @@
+import type { AppErrorArgs } from '../errors/app-error';
 import type { AppError } from '../errors/app-error';
 import type { Task } from 'true-myth';
 
 import { all, resolve } from 'true-myth/task';
 
-import type {
-  AnnotatedTaskMap,
-  AnnotatedTaskMapOpts,
-} from './annotated-task-map/types';
+import type { AnnotatedTaskMap } from './annotated-task-map/types';
 
 export type {
   AnnotatedTaskMap,
@@ -17,7 +15,7 @@ export type {
 export function makeAnnotatedTaskMap<
   const TMetadata extends object,
   const TSuccess,
-  const TError extends AppError,
+  const TError extends AppError<AppErrorArgs & AppErrorArgs>,
 >(
   entries: ReadonlyArray<
     readonly [
@@ -31,7 +29,7 @@ export function makeAnnotatedTaskMap<
 export function makeAnnotatedTaskMap<
   const TMetadata extends object,
   const TSuccess,
-  const TError extends AppError,
+  const TError extends AppError<AppErrorArgs & AppErrorArgs>,
 >({
   entries,
   processEntry,
@@ -56,7 +54,7 @@ export function makeAnnotatedTaskMap<
   const TKey extends string,
   const TMetadata extends object,
   const TSuccess,
-  const TError extends AppError,
+  const TError extends AppError<AppErrorArgs & AppErrorArgs>,
 >({
   createEntry,
   createMetadata,
@@ -75,7 +73,7 @@ export function makeAnnotatedTaskMap<
   const TKey extends string,
   const TMetadata extends object,
   const TSuccess,
-  const TError extends AppError,
+  const TError extends AppError<AppErrorArgs & AppErrorArgs>,
 >({
   createMetadata,
   keys,
@@ -96,7 +94,10 @@ export function makeAnnotatedTaskMap(
           string,
           {
             readonly metadata: object;
-            readonly value: Task<unknown, AppError>;
+            readonly value: Task<
+              unknown,
+              AppError<AppErrorArgs & AppErrorArgs>
+            >;
           },
         ]
       >
@@ -104,29 +105,41 @@ export function makeAnnotatedTaskMap(
         readonly entries: AnnotatedTaskMap<{
           metadata: object;
           success: unknown;
-          error: AppError;
+          error: AppError<AppErrorArgs & AppErrorArgs>;
         }>;
         readonly processEntry: (args: {
           readonly id: string;
           readonly metadata: object;
           readonly value: unknown;
-        }) => Task<unknown, AppError>;
+        }) => Task<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
       }
     | {
         readonly keys: ReadonlyArray<string>;
         readonly createMetadata: (key: string) => object;
-        readonly createEntry: (key: string) => Task<unknown, AppError>;
+        readonly createEntry: (
+          key: string,
+        ) => Task<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
       }
     | {
         readonly createMetadata: (key: string) => object;
         readonly keys: ReadonlyArray<string>;
-        readonly processEntry: (key: string) => Task<unknown, AppError>;
+        readonly processEntry: (
+          key: string,
+        ) => Task<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
       },
 ):
-  | AnnotatedTaskMap<{ metadata: object; success: unknown; error: AppError }>
+  | AnnotatedTaskMap<{
+      metadata: object;
+      success: unknown;
+      error: AppError<AppErrorArgs & AppErrorArgs>;
+    }>
   | Task<
-      AnnotatedTaskMap<{ metadata: object; success: unknown; error: AppError }>,
-      AppError
+      AnnotatedTaskMap<{
+        metadata: object;
+        success: unknown;
+        error: AppError<AppErrorArgs & AppErrorArgs>;
+      }>,
+      AppError<AppErrorArgs & AppErrorArgs>
     > {
   if (Array.isArray(arg)) {
     return new Map(arg);
@@ -138,13 +151,13 @@ export function makeAnnotatedTaskMap(
         readonly entries: AnnotatedTaskMap<{
           metadata: object;
           success: unknown;
-          error: AppError;
+          error: AppError<AppErrorArgs & AppErrorArgs>;
         }>;
         readonly processEntry: (args: {
           readonly id: string;
           readonly metadata: object;
           readonly value: unknown;
-        }) => Task<unknown, AppError>;
+        }) => Task<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
       };
       return [...entries.entries()]
         .reduce<
@@ -153,10 +166,13 @@ export function makeAnnotatedTaskMap(
               string,
               {
                 readonly metadata: object;
-                readonly value: Task<unknown, AppError>;
+                readonly value: Task<
+                  unknown,
+                  AppError<AppErrorArgs & AppErrorArgs>
+                >;
               },
             ])[],
-            AppError
+            AppError<AppErrorArgs & AppErrorArgs>
           >
         >(
           (chain, [id, entry]) =>
@@ -179,7 +195,10 @@ export function makeAnnotatedTaskMap(
               string,
               {
                 readonly metadata: object;
-                readonly value: Task<unknown, AppError>;
+                readonly value: Task<
+                  unknown,
+                  AppError<AppErrorArgs & AppErrorArgs>
+                >;
               },
             ])[],
           ),
@@ -188,16 +207,18 @@ export function makeAnnotatedTaskMap(
         AnnotatedTaskMap<{
           metadata: object;
           success: unknown;
-          error: AppError;
+          error: AppError<AppErrorArgs & AppErrorArgs>;
         }>,
-        AppError
+        AppError<AppErrorArgs & AppErrorArgs>
       >;
     }
 
     const { createMetadata, keys, processEntry } = arg as {
       readonly createMetadata: (key: string) => object;
       readonly keys: ReadonlyArray<string>;
-      readonly processEntry: (key: string) => Task<unknown, AppError>;
+      readonly processEntry: (
+        key: string,
+      ) => Task<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
     };
     return keys
       .reduce<
@@ -206,10 +227,13 @@ export function makeAnnotatedTaskMap(
             string,
             {
               readonly metadata: object;
-              readonly value: Task<unknown, AppError>;
+              readonly value: Task<
+                unknown,
+                AppError<AppErrorArgs & AppErrorArgs>
+              >;
             },
           ])[],
-          AppError
+          AppError<AppErrorArgs & AppErrorArgs>
         >
       >(
         (chain, key) =>
@@ -227,19 +251,28 @@ export function makeAnnotatedTaskMap(
             string,
             {
               readonly metadata: object;
-              readonly value: Task<unknown, AppError>;
+              readonly value: Task<
+                unknown,
+                AppError<AppErrorArgs & AppErrorArgs>
+              >;
             },
           ])[],
         ),
       )
       .map((entries) => new Map(entries)) as Task<
-      AnnotatedTaskMap<{ metadata: object; success: unknown; error: AppError }>,
-      AppError
+      AnnotatedTaskMap<{
+        metadata: object;
+        success: unknown;
+        error: AppError<AppErrorArgs & AppErrorArgs>;
+      }>,
+      AppError<AppErrorArgs & AppErrorArgs>
     >;
   }
 
   const { createMetadata, createEntry, keys } = arg as {
-    readonly createEntry: (key: string) => Task<unknown, AppError>;
+    readonly createEntry: (
+      key: string,
+    ) => Task<unknown, AppError<AppErrorArgs & AppErrorArgs>>;
     readonly createMetadata: (key: string) => object;
     readonly keys: ReadonlyArray<string>;
   };
@@ -252,7 +285,11 @@ export function makeAnnotatedTaskMap(
         ),
       ),
   ) as Task<
-    AnnotatedTaskMap<{ metadata: object; success: unknown; error: AppError }>,
-    AppError
+    AnnotatedTaskMap<{
+      metadata: object;
+      success: unknown;
+      error: AppError<AppErrorArgs & AppErrorArgs>;
+    }>,
+    AppError<AppErrorArgs & AppErrorArgs>
   >;
 }

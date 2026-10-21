@@ -1,3 +1,4 @@
+import type { BuilderPreconditionErrorArgs } from './builder-error';
 import type { BuilderPreconditionError } from './builder-error';
 import type { Result, Task } from 'true-myth';
 
@@ -21,9 +22,10 @@ import type { Result, Task } from 'true-myth';
 export interface Buildable<
   TArgs extends object,
   TInstance,
-  TError extends BuilderPreconditionError,
-  TReturnType extends Result<TInstance, TError> | Task<TInstance, TError> =
-    Result<TInstance, TError>,
+  TError extends BuilderPreconditionError<
+    Partial<BuilderPreconditionErrorArgs> & BuilderPreconditionErrorArgs
+  >,
+  TReturnType extends Result<TInstance, TError> | Task<TInstance, TError>,
 > {
   create: BuilderCreate<TArgs, TReturnType>;
 }
@@ -162,6 +164,16 @@ export interface Buildable<
 export type BuilderCreate<
   TArgs extends object,
   TReturnType extends
-    | Result<unknown, BuilderPreconditionError>
-    | Task<unknown, BuilderPreconditionError>,
+    | Result<
+        unknown,
+        BuilderPreconditionError<
+          Partial<BuilderPreconditionErrorArgs> & BuilderPreconditionErrorArgs
+        >
+      >
+    | Task<
+        unknown,
+        BuilderPreconditionError<
+          Partial<BuilderPreconditionErrorArgs> & BuilderPreconditionErrorArgs
+        >
+      >,
 > = (args: TArgs) => TReturnType;
