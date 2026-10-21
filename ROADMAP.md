@@ -31,11 +31,34 @@ Engineering debt is listed with enough detail to act on. Product direction is li
 - **Define stream declaration.** A stream should declare its series kind and default visibility without an application configuration object.
 - **Specify the descriptor grammar.** Document descriptor kinds, nesting, and the mapping from descriptor to series field, with examples.
 
+## Testing
+
+No chart tests exist to port. The suite is new work; today there is one acceptance test covering a single rendering path.
+
+- **Unit.** Snapshot capture and diff precedence, including the cases that must do nothing; conversion for each series kind; projection for each point shape; layout assembly from fragments and overlay; label composition.
+- **Contract conformance.** A reusable suite that any provider and presenter can run against its own implementations, so a consumer can prove it satisfies the contract rather than discovering mismatches at runtime.
+- **Acceptance.** Mount, update, rebuild, rename, and removal; multi-pane composition; visibility toggles; rapid mount and unmount; teardown with no post-destroy callbacks.
+- **Lifecycle.** Assert chart disposal once implemented, not merely DOM removal.
+- **Regression.** One deterministic synthetic fixture per case, so a failure reproduces exactly.
+- **Environment.** Runs in the repository container, headless and deterministic, alongside the existing acceptance test.
+
+## Known defects
+
+Defects present in the current implementation. Each is open until the linked work lands.
+
+| Defect | Effect | Where |
+| --- | --- | --- |
+| The chart instance is never disposed | Memory and observers retained after unmount; DOM removal hides it | `chart/modifiers/chart-lwc-adapter.ts` |
+| A series is skipped when no adapter matches its kind | The series is missing with only a log entry; no visible or programmatic signal | `chart/modifiers/chart-lwc-adapter.ts` |
+| Declarations are not emitted by the build | Consumers resolve runtime code but get no published types | `packages/ember-charts/package.json` |
+| Projection still wraps values in an internal currency type | Consumers without a currency concept must imitate it or convert twice | `chart/data-stream-presenters/_lib/projection-utils.ts` |
+| A zero-size host has no defined behaviour | `autoSize` may produce a chart with no dimensions until the element is laid out | `chart/modifiers/chart-lwc-adapter.ts` |
+
 ## Delivery
 
 - **Emit declarations.** Publish `.d.ts` output alongside the runtime build and verify the export map resolves for both.
 - **Add CI.** Install, build, lint, typecheck, test, and format on every change.
-- **Broaden the test matrix.** Adapters, reconciliation cases, multi-pane layouts, removal, and failure paths.
+- **Land the test suite** described under Testing, including contract conformance for consumers.
 - **Documentation site.** Synthetic data only, covering core and Ember usage.
 
 ## Planned expansion
