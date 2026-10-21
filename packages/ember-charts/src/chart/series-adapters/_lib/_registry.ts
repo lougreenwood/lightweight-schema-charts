@@ -16,6 +16,7 @@
 import type { SeriesAdapterLike } from './_adapter';
 import type { NoSeriesAdapterForTypeError } from './_registry/errors';
 import type { SeriesType } from './_registry/types';
+import type { SeriesValueHandler, SeriesValueHandlers } from './value-handler';
 
 import { createNoSeriesAdapterForTypeError } from './_registry/errors';
 import { areaAdapter } from '../area';
@@ -39,8 +40,17 @@ export const adapters = [
  * SeriesAdapterRegistry encapsulates adapter lookup state and APIs.
  */
 export class SeriesAdapterRegistry {
-  constructor(items: ReadonlyArray<(typeof adapters)[number]> = adapters) {
+  constructor(
+    items: ReadonlyArray<(typeof adapters)[number]> = adapters,
+    valueHandlers: SeriesValueHandlers = {},
+  ) {
     this.#map = new Map(items.map((adapter) => [adapter.id, adapter] as const));
+    this.#valueHandlers = new Map(Object.entries(valueHandlers));
+  }
+
+  /** Resolve a value handler by the identifier a descriptor names. */
+  getValueHandler(id: string | undefined): SeriesValueHandler | undefined {
+    return id === undefined ? undefined : this.#valueHandlers.get(id);
   }
 
   /**
@@ -57,4 +67,5 @@ export class SeriesAdapterRegistry {
   }
 
   #map: Map<string, SeriesAdapterLike>;
+  #valueHandlers: Map<string, SeriesValueHandler>;
 }

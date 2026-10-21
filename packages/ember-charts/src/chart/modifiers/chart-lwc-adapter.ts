@@ -51,6 +51,8 @@ import type {
   SeriesPath,
 } from '../schema/types';
 import type { SeriesAdapterRegistry } from '../series-adapters/_lib/_registry';
+import type { BaseSeriesOptions } from '../series-adapters/_lib/_adapter';
+import { interpretProjectedPoints } from '../series-adapters/_lib/value-handler';
 import type { IChartApi, Time } from 'lightweight-charts';
 
 import { createPaneLabelPrimitive } from '../chart-ui/primitives/anchored-text';
@@ -455,16 +457,33 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
           parentDescriptor,
         });
         const seriesKey = `${groupId}::${fieldPath}`;
+        const valueHandler = seriesAdapterRegistry.getValueHandler(
+          descriptor.valueHandler,
+        );
+
+        const seriesOptions: BaseSeriesOptions = { name: seriesTitle };
+        if (priceScaleId !== undefined) {
+          seriesOptions.priceScaleId = priceScaleId;
+        }
+        if (valueHandler?.formatNumber !== undefined) {
+          seriesOptions.priceFormat = {
+            type: 'custom',
+            formatter: valueHandler.formatNumber,
+          };
+        }
 
         const { seriesApi } = adapter.createSeries({
           context: { chart, paneIndex, seriesKey },
-          options: { name: seriesTitle, priceScaleId },
+          options: seriesOptions,
         });
 
         // Backfill with initial data
         if (dataSamples.size > 0) {
           adapter.backfillSeries({
-            data: presenter.projectField({ dataSamples, fieldPath }),
+            data: interpretProjectedPoints({
+              points: presenter.projectField({ dataSamples, fieldPath }),
+              handler: valueHandler,
+            }),
             seriesApi,
           });
         }
@@ -694,6 +713,7 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
             enrichedGroup,
             groupId,
             previousCursor: previousSnapshot?.cursor,
+            seriesAdapterRegistry,
           });
           break;
         }
@@ -843,10 +863,12 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
     enrichedGroup,
     groupId,
     previousCursor,
+    seriesAdapterRegistry,
   }: {
     enrichedGroup: SeriesGroupState;
     groupId: GroupId;
     previousCursor: DataProviderCursor | undefined;
+    seriesAdapterRegistry: SeriesAdapterRegistry;
   }): void {
     const { dataStreamIdentifier, presenter, provider } = enrichedGroup;
 
@@ -870,9 +892,22 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
       const cachedSeries = adapterGroupState.series.get(seriesState.fieldPath);
       if (!cachedSeries) continue;
 
-      const projectedData = presenter.projectField({
-        dataSamples,
+      const found = findDescriptorWithParent({
+        descriptors: presenter.structuralDescriptors,
         fieldPath: seriesState.fieldPath,
+      });
+      const valueHandler =
+        found !== undefined &&
+        isCompleteLeafStructuralDescriptor(found.descriptor)
+          ? seriesAdapterRegistry.getValueHandler(found.descriptor.valueHandler)
+          : undefined;
+
+      const projectedData = interpretProjectedPoints({
+        points: presenter.projectField({
+          dataSamples,
+          fieldPath: seriesState.fieldPath,
+        }),
+        handler: valueHandler,
       });
 
       const incrementalProjectedData =

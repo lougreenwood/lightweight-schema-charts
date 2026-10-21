@@ -16,3 +16,7 @@ export type {
 export type { DataProviderLike } from './chart/data-providers/_lib/data-provider-like';
 export type { DataStreamPresenterLike } from './chart/data-stream-presenters/_lib/data-stream-presenter-like';
 export type { DataStreamPresenterFactory } from './chart/data-stream-presenters/_lib/data-stream-presenter-registry/types';
+export type {
+  SeriesValueHandler,
+  SeriesValueHandlers,
+} from './chart/series-adapters/_lib/value-handler';

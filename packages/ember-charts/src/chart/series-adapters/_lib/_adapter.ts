@@ -11,10 +11,7 @@
  * Adapters should not import from this module cyclically (keep adapter implementations decoupled).
  */
 
-import type {
-  PaneSeriesApiFor,
-  SeriesType,
-} from './_registry/types';
+import type { PaneSeriesApiFor, SeriesType } from './_registry/types';
 import type {
   DeepPartial,
   IChartApi,
@@ -59,9 +56,15 @@ export type BackfillSeriesArgs<
  *
  * Uses `name` as our internal term; adapters translate to LWC's `title` at the boundary.
  */
+export type SeriesPriceFormat = Readonly<{
+  type: 'custom';
+  formatter: (value: number) => string;
+}>;
+
 export type BaseSeriesOptions = {
   name?: string;
   priceScaleId?: string;
+  priceFormat?: SeriesPriceFormat;
 };
 
 /**

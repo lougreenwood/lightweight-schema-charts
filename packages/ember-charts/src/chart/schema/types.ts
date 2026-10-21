@@ -113,6 +113,7 @@ export type CompleteLeafStructuralDescriptor<
   Readonly<{
     kind: 'series';
     seriesKind: SeriesType;
+    valueHandler?: string;
   }>;
 
 /**
