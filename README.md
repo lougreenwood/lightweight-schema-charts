@@ -1,24 +1,64 @@
 # Lightweight Schema Charts
 
-Independent chart packages for building interactive financial charts with Lightweight Charts.
+A schema-driven, declarative chart layer for [Lightweight Charts](https://tradingview.github.io/lightweight-charts/).
+
+Instead of imperatively creating series and pushing points, a consumer declares data streams and lets presenters describe the shape of each stream's data. The schema composes panes, groups, and visible series from those declarations, and the renderer reconciles changes into Lightweight Charts. The chart never needs to know what a consumer's models look like.
 
 ## Status
 
-The workspace, repository-owned development container, package builds, and Ember test host are in place. Chart runtime implementation and the acceptance test are still being added. Nothing is published.
+The Ember package renders a working chart and is covered by an acceptance test that mounts it, updates the data, and tears it down. Nothing is published.
+
+Two things are deliberately incomplete. The framework-neutral core is a placeholder, and the renderer currently lives entirely in the Ember package. The repository is moving toward the dependency direction below rather than claiming it today.
 
 ## Packages
 
-| Package                            | Purpose                                                                              |
-| ---------------------------------- | ------------------------------------------------------------------------------------ |
-| `@lightweight-schema-charts/core`  | Framework-neutral chart engine, state contracts, series adapters, and reconciliation |
-| `@lightweight-schema-charts/ember` | Ember integration for mounting, updating, and destroying a chart                     |
+| Package                            | Purpose                                                                                         |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `@lightweight-schema-charts/ember` | Ember host: schema factory, provider and presenter contracts, series adapters, and the modifier |
+| `@lightweight-schema-charts/core`  | Intended framework-neutral renderer. Currently holds pure snapshot and diff functions           |
 
-The package names are working names until public naming is settled.
+## Dependency direction
+
+```text
+Ember host ─→ @lightweight-schema-charts/ember ─→ @lightweight-schema-charts/core ─→ lightweight-charts
+```
+
+The intended core owns reconciliation, adapters, and lifecycle without knowing Ember, Glimmer, an application store, or a component library. The Ember package owns element lifecycle, scheduling, and the reactive schema composition.
+
+## How a consumer wires a chart
+
+Four pieces, all supplied by the consumer:
+
+1. **Data providers** implement the provider contract. A provider exposes its stream identifiers, a default layout, a cursor, incremental data fetching, plain per-stream data state, and a stable group identity per stream.
+2. **Presenters** describe a stream: its display names, structural descriptors, default visible fields, and how a raw sample projects into series points.
+3. **A presenter factory** maps a consumer's own provider and stream types to the right presenter. This is the plugin seam: the package never enumerates provider types.
+4. **A schema** is created from those inputs and exposes a chart state that the modifier renders.
+
+```ts
+const schema = createReactiveChartSchema({
+  getDataProviders: () => new Set([myProvider]),
+  presenterFactory: {
+    makeDataStreamPresenter: ({ dataProvider, dataStreamIdentifier }) =>
+      presenterFor({ dataProvider, dataStreamIdentifier }),
+  },
+});
+```
+
+The modifier takes the state, an adapter registry, and a small domain context:
+
+```gts
+<div
+  style="height: 320px; width: 640px"
+  {{ChartLwcAdapterModifier this.state this.registry this.domainContext}}
+></div>
+```
+
+`test-app/app/synthetic/synthetic-chart.ts` is the reference adapter: a complete synthetic provider, presenter, and candle set. It is the fastest way to see the required shapes.
 
 ## Workspace
 
 ```text
-charts/
+.
 ├── packages/
 │   ├── charts/              @lightweight-schema-charts/core
 │   └── ember-charts/        @lightweight-schema-charts/ember
@@ -30,32 +70,9 @@ charts/
 
 The Dev Container forwards port 4200 for the test application.
 
-## Dependency direction
-
-```text
-Ember host ─→ @lightweight-schema-charts/ember ─→ @lightweight-schema-charts/core ─→ lightweight-charts
-```
-
-The core package is framework-neutral. It does not depend on Ember, Glimmer, an application store, a component library, or this repository's test application.
-
-## Milestone scope
-
-The first working milestone will provide:
-
-- A neutral chart engine that accepts explicit data-source, presenter, theme, label, and diagnostic inputs.
-- Six series adapters: area, bar, baseline, candlestick, histogram, and line.
-- Create, update, and destroy lifecycle behavior.
-- An Ember binding that schedules updates and owns teardown.
-- One Ember runtime test using deterministic synthetic candles to verify mount, update, and destruction.
-- A host application built with the package rather than directly against source files.
-
-The current workspace contains the buildable packages, pure snapshot/diff functions, and test-app scaffolding. The chart engine, rendering ports, adapters, and real Ember binding remain unimplemented.
-
-Documentation websites, publication, a complete test matrix, and a stable public API are not part of this milestone.
-
 ## Development
 
-This repository owns its toolchain and development container. No host `pnpm install` is required.
+The repository owns its toolchain and development container. No host `pnpm install` is required.
 
 ```sh
 mise run container:up
@@ -69,9 +86,21 @@ mise run test
 
 Run `mise run container:shell` to open a shell inside the container, then use package-local `pnpm` commands.
 
-### Container volumes
+Every workspace package with its own dependencies needs a `node_modules` named volume in `compose.yaml`. The root volume is not enough for pnpm's package-local links.
 
-Every workspace package with its own dependencies needs a `node_modules` named volume in `compose.yaml`. The root `node_modules` volume is not enough for pnpm's package-local links.
+## Known limitations
+
+- The modifier removes series and panes on teardown but does not dispose the chart instance.
+- Package declarations are not emitted by the default build.
+- Part of the series projection path still uses an internal currency value type rather than plain numbers.
+- One acceptance test covers one rendering path. Adapters, multi-pane layouts, and removal paths are untested.
+
+See [ROADMAP.md](ROADMAP.md) for the engineering work behind these limitations and for the product direction still to be specified.
+
+## Documentation
+
+- [Architecture overview](docs/architecture/overview.md)
+- [Decision 0001: first milestone scope](docs/decisions/0001-first-milestone-scope.md)
 
 ## License
 
