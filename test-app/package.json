@@ -92,6 +92,6 @@
     "edition": "octane"
   },
   "dependencies": {
-    "true-myth": "9.3.1"
+    "true-myth": "9.4.0"
   }
 }

@@ -64,9 +64,6 @@ importers:
       stable-hash:
         specifier: ^0.0.6
         version: 0.0.6
-      true-myth:
-        specifier: 9.3.1
-        version: 9.3.1
       type-fest:
         specifier: ^4.41.0
         version: 4.41.0
@@ -161,6 +158,9 @@ importers:
       rollup:
         specifier: ^4.22.5
         version: 4.64.12
+      true-myth:
+        specifier: 9.4.0
+        version: 9.4.0
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -171,8 +171,8 @@ importers:
   test-app:
     dependencies:
       true-myth:
-        specifier: 9.3.1
-        version: 9.3.1
+        specifier: 9.4.0
+        version: 9.4.0
     devDependencies:
       '@babel/core':
         specifier: ^7.29.0
@@ -5639,8 +5639,8 @@ packages:
     resolution: {integrity: sha512-OLWW+Nd99NOM53aZ8ilT/YpEiOo6mXD3F4/wLbARqybSZ3Jb8IxHK5UGVbZaae0wtXAyQshVV+SeqVBik+Fbmw==}
     engines: {node: '>=8'}
 
-  true-myth@9.3.1:
-    resolution: {integrity: sha512-a+u2L3y6XF3HLBJrSox8pRmod2o/3k28hpXX8OD56mLnffmXOwzQFBDBT0gy8ROIReLvdVvMPtQYtCsgFldfMw==}
+  true-myth@9.4.0:
+    resolution: {integrity: sha512-NQP/xMI25jtwk7mDBgA0VS+xdVWUqDaxrTofvx1gfhc5PQwMyA1V39oERLvPrCbI3+6S29fIkivy2ZXdzNY3kQ==}
     engines: {node: 18.* || >= 20.*}
 
   ts-api-utils@2.5.0:
@@ -12645,7 +12645,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  true-myth@9.3.1: {}
+  true-myth@9.4.0: {}
 
   ts-api-utils@2.5.0(typescript@5.8.3):
     dependencies:

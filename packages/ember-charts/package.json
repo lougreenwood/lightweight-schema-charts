@@ -54,7 +54,6 @@
     "parse-duration-ms": "^0.1.0",
     "pino": "9.5.0",
     "stable-hash": "^0.0.6",
-    "true-myth": "9.3.1",
     "type-fest": "^4.41.0",
     "zod": "^4.6.7"
   },
@@ -88,12 +87,14 @@
     "prettier": "^3.4.2",
     "prettier-plugin-ember-template-tag": "^2.0.4",
     "rollup": "^4.22.5",
+    "true-myth": "9.4.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.19.1"
   },
   "peerDependencies": {
     "ember-source": ">= 6.7.0",
-    "lightweight-charts": "^5.1.0"
+    "lightweight-charts": "^5.1.0",
+    "true-myth": "^9.4.0"
   },
   "engines": {
     "node": ">= 20"
