@@ -27,11 +27,11 @@ Engineering debt is listed with enough detail to act on. Product direction is li
 Today a provider must extend a class, declare its own static type, and satisfy abstract members:
 
 ```ts
-export class MarketDataDataProvider extends AbstractDataProvider<
-  typeof MarketDataDataProvider,
-  DataProviderInstanceContext
+export class SampleDataProvider extends AbstractDataProvider<
+  typeof SampleDataProvider,
+  ProviderContext
 > {
-  protected readonly staticSide = MarketDataDataProvider;
+  protected readonly staticSide = SampleDataProvider;
   static readonly dataSampleSource = Object;
   static readonly dataStreamIdentifiers = new Set([...]);
 
@@ -47,14 +47,14 @@ export class MarketDataDataProvider extends AbstractDataProvider<
 A factory returns the same structural contract without inheritance, statics, or protected members:
 
 ```ts
-export function createMarketDataDataProvider({
+export function createSampleDataProvider({
   dataSource,
   identifier,
   context,
 }: {
-  dataSource: MarketDataDataStreamModel;
-  identifier: MarketDataIdentifier;
-  context: DataProviderInstanceContext;
+  dataSource: SampleStreamModel;
+  identifier: SampleIdentifier;
+  context: ProviderContext;
 }): DataProviderLike {
   // Shared behavior comes from pure helpers or a small state record.
   const state = createProviderState();
@@ -103,7 +103,7 @@ Costs and constraints:
 
 - The shared behavior in both bases — cursor storage, batch finalization, descriptor caching, default field selection, projection orchestration — must be extracted into functions before any class can be replaced.
 - The presenter base uses `trackedMap` for descriptor caching; the closure must preserve that reactivity exactly, or empty-to-populated updates regress.
-- It touches every provider and presenter, including the five indicator presenters, so it needs its own test pass.
+- It touches every provider and presenter in the consumer, so it needs its own test pass.
 - It is post-cutover work. Do not reshape construction while the application is still moving onto the package.
 - **Document the plugin boundary.** Provider and presenter are the only integration surface. Make that explicit in the architecture overview, with the reference adapter as the example.
 
