@@ -17,7 +17,7 @@ import type { NoSeriesAdapterForTypeError } from './_registry/errors';
 import type { SeriesType } from './_registry/types';
 import type { SeriesValueHandler, SeriesValueHandlers } from './value-handler/types';
 import type { SeriesValueHandlerNotFoundError } from './value-handler/errors';
-import Result from 'true-myth/result';
+import type Result from 'true-myth/result';
 export declare const adapters: readonly [import("./_adapter").SeriesAdapterWithDescriptor<{
     datum: import("../area").AreaPoint;
     descriptor: import("../area").AreaSeriesDescriptor;

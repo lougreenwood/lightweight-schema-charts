@@ -52,9 +52,8 @@ export class ReactiveChartSchema {
   /**
    * Reactive getter: flat map of all data streams to their owning providers.
    *
-   * Reactivity source: `#getDataProviders()` reads tracked args (e.g., `this.args.marketDataDataStream`,
-   * `this.args.indicatorProviders`). When provider instances change (timeframe change → new TPS → new providers), Ember
-   * autotracking invalidates this getter.
+   * Reactivity source: `#getDataProviders()` reads tracked consumer state. When provider instances change (for example,
+   * a timeframe change produces a new source and new providers), Ember autotracking invalidates this getter.
    *
    * Key: DataStreamIdentifier (globally unique — contains dataProviderIdentifier + stream id/type) Value: Owning
    * DataProviderLike instance
@@ -524,8 +523,8 @@ export class ReactiveChartSchema {
   /**
    * Derive per-stream data state via type guard narrowing.
    *
-   * Cursor is available on all providers. projectionId and dataHash are indicator-specific — derived by narrowing the
-   * provider via `isIndicatorProvider()` and finding the matching indicator by stream id.
+   * Cursor is available on all providers. projectionId and dataHash are optional and supplied by the provider's
+   * `getDataState`.
    */
   #deriveDataState({
     dataProvider,

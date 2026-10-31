@@ -63,7 +63,7 @@ The modifier takes the schema state, an adapter registry, and a domain context o
 
 - Teardown removes series and panes but does not call `chart.remove()`; the chart instance is not disposed.
 - `build` emits declarations before runtime modules; failed declaration checks stop the build and leave no partial declarations.
-- The public types do not mark internal modules as off limits; treat the exports above as the surface.
+- The package exports only the root entry, the template registry, and the addon main; internal modules are not importable.
 
 ## Development
 
@@ -77,7 +77,7 @@ mise run test
 
 Package-local commands run through `pnpm --filter @lightweight-schema-charts/ember <script>` inside the container.
 
-`prepare` and `prepack` run the full build. For pnpm Git dependencies, select `#<commit>&path:/packages/ember-charts`; selecting the repository root installs the workspace package, not this addon. The consumer must explicitly allow the Git dependency's build scripts. A packed-artifact check and a Git-install check are separate proofs.
+`prepare` runs the full build. For pnpm Git dependencies, select `#<commit>&path:/packages/ember-charts`; selecting the repository root installs the workspace package, not this addon. The consumer must explicitly allow the Git dependency's build scripts. A packed-artifact check and a Git-install check are separate proofs.
 
 pnpm resolves a GitHub specifier to a repository tarball rather than a Git clone, so its `prepare` script is not run. The addon therefore commits `dist/` and `declarations/` so a pinned GitHub dependency is consumable. Rebuild and commit them whenever source changes; CI should verify they are current.
 

@@ -13,12 +13,6 @@ import type { IPaneApi, Time } from 'lightweight-charts';
  */
 export type BaseStructuralDescriptor<TDataStreamId extends DataStreamIdentifier> = BranchStructuralDescriptor<TDataStreamId> | LeafStructuralDescriptor<TDataStreamId>;
 /**
- * ProjectedData
- *
- * Union of all chart data point types that can be projected from samples. Each type corresponds to a specific
- * LightweightCharts series type.
- */
-/**
  * BranchStructuralDescriptor
  *
  * Describes a container field that groups related series fields. Used for organizing complex data structures in the UI.
@@ -89,64 +83,6 @@ export type CompleteLeafStructuralDescriptor<TDataStreamId extends DataStreamIde
     kind: 'series';
     seriesKind: SeriesType;
     valueHandler?: string;
-}>;
-/**
- * DefaultVisibleFields
- *
- * Configuration for controlling which fields are visible by default when the chart initializes.
- *
- * When provided to ChartSchema:
- *
- * - Streams with a matching entry use the specified visibleFields
- * - Streams without an entry fall back to the presenter's defaultSeries
- * - An entry with an empty visibleFields set shows nothing for that stream
- *
- * @example
- *
- * ```ts
- * import {
- *   MARKET_DATA_OHLC_STREAM_IDENTIFIER,
- *   MARKET_DATA_PRICE_STREAM_IDENTIFIER,
- * } from "../../../../../../../../../data-providers/market-data-data-stream/types";
- *
- * const defaultVisibleFields: DefaultVisibleFields = [
- *   // Show only OHLC candlesticks
- *   { dataStreamIdentifier: MARKET_DATA_OHLC_STREAM_IDENTIFIER, visibleFields: new Set(['data.ohlc']) },
- *   // Hide price stream entirely
- *   { dataStreamIdentifier: MARKET_DATA_PRICE_STREAM_IDENTIFIER, visibleFields: new Set() },
- * ];
- * ```;
- * ```
- */
-export type DefaultVisibleFields = ReadonlyArray<DefaultVisibleFieldsEntry>;
-/**
- * DefaultVisibleFieldsEntry
- *
- * Configuration entry specifying which fields should be visible by default for a specific data stream.
- *
- * @example
- *
- * ```ts
- * import { MARKET_DATA_OHLC_STREAM_IDENTIFIER } from "../../../../../../../../../data-providers/market-data-data-stream/types";
- *
- * const defaultVisibleFields = [
- *   {
- *     dataStreamIdentifier: MARKET_DATA_OHLC_STREAM_IDENTIFIER,
- *     visibleFields: new Set(['data.ohlc']),
- *   },
- * ];
- * ```;
- * ```
- */
-export type DefaultVisibleFieldsEntry = Readonly<{
-    /**
-     * The data stream this configuration applies to.
-     */
-    dataStreamIdentifier: DataStreamIdentifier;
-    /**
-     * Set of field paths to display by default for this stream. An empty set means "show nothing" for this stream.
-     */
-    visibleFields: ReadonlySet<SeriesPath>;
 }>;
 /**
  * DeferredSeriesNode
@@ -229,11 +165,12 @@ export type PartialLeafStructuralDescriptor<TDataStreamId extends DataStreamIden
  * Per-stream data state derived inline by the `state` getter via type guard narrowing.
  *
  * - `cursor`: Provider-maintained cursor for incremental data fetching. `undefined` if no data yet.
- * - `dataLength`: Indicator-only. Length of the indicator's HasMany `data` relationship. Reading this establishes
- *   autotracking on the relationship so `@cached state` recomputes when data goes from empty → populated. `undefined`
- *   for market data streams.
- * - `projectionId`: Indicator-only. Changes when indicator config is rebuilt. `undefined` for market data streams.
- * - `dataHash`: Indicator-only. Changes when the latest signal bar mutates. `undefined` for market data streams.
+ * - `dataLength`: Length of the consumer data source's sample collection, when the provider reports one. Reading this
+ *   establishes tracking so `@cached state` recomputes when the collection goes from empty to populated. `undefined`
+ *   when the stream does not expose a length.
+ * - `projectionId`: Changes when the stream's projection configuration is rebuilt. `undefined` when the stream has no
+ *   projection identity.
+ * - `dataHash`: Changes when the stream's latest sample changes. `undefined` when the stream has no content hash.
  */
 export type PerStreamDataState = Readonly<{
     cursor: DataProviderCursor | undefined;
@@ -344,8 +281,8 @@ export type SeriesId = string;
  *
  * Note: Access the provider identifier via dataStreamIdentifier.dataProviderIdentifier
  *
- * @template TDataStreamId - The specific DataStreamIdentifier type. When narrowed (e.g., to
- *   IndicatorProviderDataStreamIdentifier), preserves type information through the descriptor chain.
+ * @template TDataStreamId - The specific DataStreamIdentifier type. When narrowed to a specific stream identifier type,
+ *   preserves type information through the descriptor chain.
  */
 export type SeriesIdentifier<TDataStreamId extends DataStreamIdentifier> = Readonly<{
     dataStreamIdentifier: TDataStreamId;

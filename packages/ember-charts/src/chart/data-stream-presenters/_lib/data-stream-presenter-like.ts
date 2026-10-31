@@ -69,9 +69,8 @@ export type DataStreamPresenterLike<
  * Minimal interface for data sources that have configuration. Used as a type constraint to determine whether a data
  * stream presenter is configurable.
  *
- * This is intentionally minimal — it only requires a `configValues` property. Concrete data sources (like
- * `IndicatorModelLike`) will have additional properties, but non-form trading-chart consumers only need the canonical
- * config-values handle.
+ * This is intentionally minimal — it only requires a `configValues` property. Concrete data sources will have
+ * additional properties, but consumers that are not forms only need the canonical config-values handle.
  */
 export interface HasConfigValues {
   readonly configValues: unknown;
@@ -185,8 +184,8 @@ export interface ConfigurableDataStreamPresenterLike<
 /**
  * NonConfigurableDataStreamPresenterLike
  *
- * Presenter for data streams that do not support configuration (e.g., ticker streams). The data source exists but does
- * not have a `configValues` property.
+ * Presenter for data streams that do not support configuration. The data source exists but does not have a
+ * `configValues` property.
  *
  * The data source need not expose configuration.
  */

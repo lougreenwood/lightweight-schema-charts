@@ -80,8 +80,8 @@ export type DataStreamHasNoDataError = EmptyResultError<{
 /**
  * Error when attempting to get configuration for a data stream that does not support configuration.
  *
- * This is a precondition error because the stream type itself does not support configuration (e.g., ticker streams),
- * not because the stream doesn't exist or the config is temporarily unavailable.
+ * This is a precondition error because the stream type itself does not support configuration, not because the stream
+ * doesn't exist or the config is temporarily unavailable.
  */
 export type DataStreamNotConfigurablePreconditionError = PreconditionError<{
     errorCode: 'DATA_STREAM_NOT_CONFIGURABLE';

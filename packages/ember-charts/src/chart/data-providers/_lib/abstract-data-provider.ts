@@ -33,7 +33,8 @@ import {
   createDataStreamHasNoDataError,
 } from '../errors';
 import { Maybe } from 'true-myth';
-import Result, { err, ok } from 'true-myth/result';
+import type Result from 'true-myth/result';
+import { err, ok } from 'true-myth/result';
 
 /**
  * AbstractDataProvider
@@ -69,12 +70,12 @@ export abstract class AbstractDataProvider<
   readonly identifier: InferDataProviderIdentifier<TDataProviderStatic>;
 
   /**
-   * Human-readable name for this provider instance (the subclasses should set this, e.g., "MarketDataData").
+   * Human-readable name for this provider instance (subclasses set this).
    */
   abstract readonly name: string;
 
   /**
-   * Public accessor for the data source (e.g., IndicatorGroupViewModel, MarketDataDataStreamModel).
+   * Public accessor for the data source.
    */
   get dataSource(): InferDataSource<TDataProviderStatic> {
     return this._dataSource;
@@ -94,7 +95,7 @@ export abstract class AbstractDataProvider<
    * Default layout for this provider's streams. One pane per stream, each with an empty series array.
    *
    * The schema fills in series detail (field paths, visibility) from presenters during assembly. Multi-stream providers
-   * (e.g., MarketDataData) override to group related streams into shared panes.
+   * override to group related streams into shared panes.
    */
   get defaultLayout(): ChartLayoutFragmentData {
     return {

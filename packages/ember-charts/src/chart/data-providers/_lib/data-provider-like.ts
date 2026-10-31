@@ -47,7 +47,7 @@ import type { Result } from 'true-myth';
  */
 export interface DataProviderLike {
   /**
-   * The underlying data source (e.g., MarketDataDataStreamModel, IndicatorProvider).
+   * The underlying data source.
    *
    * Type-erased to `unknown`. Use `RegisteredDataProvider` and type guards for narrowed access.
    */
@@ -64,8 +64,8 @@ export interface DataProviderLike {
    * Default layout for this provider's streams. Declares pane structure and which stream types go in which panes.
    * Series-level detail (field paths, visibility) is filled in by the schema from presenters during assembly.
    *
-   * The base implementation produces one pane per stream. Multi-stream providers (e.g., MarketDataData) override to group
-   * related streams into shared panes.
+   * The base implementation produces one pane per stream. Multi-stream providers override to group related streams into
+   * shared panes.
    */
   readonly defaultLayout: ChartLayoutFragmentData;
 
@@ -77,14 +77,13 @@ export interface DataProviderLike {
   readonly identifier: DataProviderIdentifier;
 
   /**
-   * Human-readable name for this provider instance (e.g., "MarketDataData", "EMA Indicator Group").
+   * Human-readable name for this provider instance (e.g., "Market data", "Trend indicators").
    */
   readonly name: string;
 
   /**
-   * Stable identity key for layout persistence across window changes. Typically the provider's domain entity ID (e.g.,
-   * trade position set ID, indicator template provider ID). Used by the reactive schema to tag series groups so layout
-   * state survives data source changes.
+   * Stable identity key for layout persistence across window changes. Typically the provider's domain entity ID. Used
+   * by the reactive schema to tag series groups so layout state survives data source changes.
    */
   readonly stableLayoutKey: string;
 

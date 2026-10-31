@@ -12,7 +12,7 @@
  * Both share the same rendering logic but implement different primitive interfaces.
  */
 import type { IPanePrimitiveBase, PaneAttachedParameter, Time } from 'lightweight-charts';
-import { CanvasRenderingTarget2D } from 'fancy-canvas';
+import type { CanvasRenderingTarget2D } from 'fancy-canvas';
 /**
  * AnchoredTextOptions
  *

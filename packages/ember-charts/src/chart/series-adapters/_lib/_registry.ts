@@ -31,7 +31,8 @@ import { baselineAdapter } from '../baseline';
 import { candlestickAdapter } from '../candle-stick';
 import { histogramAdapter } from '../histogram';
 import { lineAdapter } from '../line';
-import Result, { err, ok } from 'true-myth/result';
+import type Result from 'true-myth/result';
+import { err, ok } from 'true-myth/result';
 
 export const adapters = [
   areaAdapter,

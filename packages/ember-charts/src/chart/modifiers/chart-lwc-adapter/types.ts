@@ -34,7 +34,7 @@ export type AdapterGroupState = Readonly<{
  * ChartDomainContext
  *
  * Domain-specific data that the adapter needs for labeling but that the schema no longer owns (Decision 18). Provided
- * by the component layer which has direct access to the domain models (MarketDataData, TradableAssetPair).
+ * by the component layer which has direct access to its domain models.
  */
 export type ChartDomainContext = Readonly<{
   /**
@@ -48,7 +48,7 @@ export type ChartDomainContext = Readonly<{
   timeframeLabel: string;
 
   /**
-   * Trading pair display name (e.g., "SOL/USDC") — used for pane label construction.
+   * Instrument display name (e.g., "Instrument A") — used for pane label construction.
    */
   tradableAssetPairName: string;
 }>;

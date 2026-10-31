@@ -5,7 +5,11 @@
  */
 {
   "extends": "@ember/library-tsconfig",
-  "include": ["./src/index.ts", "./unpublished-development-types/**/*"],
+  "include": [
+    "./src/index.ts",
+    "./src/template-registry.ts",
+    "./unpublished-development-types/**/*"
+  ],
   "compilerOptions": {
     "allowJs": true,
     "declarationDir": "declarations",

@@ -43,7 +43,7 @@ export interface BuildPaneLabelArgs {
      */
     timeframeLabel?: string;
     /**
-     * TradableAssetPair name (e.g., "WETH/USDC - Uniswap V2")
+     * Instrument display name (e.g., "Instrument A")
      */
     tradableAssetPairName?: string;
 }
@@ -62,7 +62,7 @@ export interface BuildSeriesLabelArgs {
      */
     parentDescriptor?: BaseStructuralDescriptor<DataStreamIdentifier>;
     /**
-     * Human-readable provider name (e.g., "MarketDataData", "MyStrategy")
+     * Human-readable provider name (e.g., "Market data", "Trend")
      */
     providerName: string;
     /**
@@ -88,13 +88,13 @@ export interface BuildSeriesTitleArgs {
 /**
  * Build a pane label with special handling for the first pane.
  *
- * First pane pattern: {TradableAssetPairName} | {SeriesLabel} [timeframe] Other panes pattern: {SeriesLabel}
+ * First pane pattern: {InstrumentName} | {SeriesLabel} [timeframe] Other panes pattern: {SeriesLabel}
  * [timeframe]
  *
  * Examples:
  *
- * - First pane: "WETH/USDC - Uniswap V2 | MarketDataData - ohlc [1m]"
- * - Other panes: "MyStrategy - macd [5m]"
+ * - First pane: "Instrument | Market data - ohlc [1m]"
+ * - Other panes: "Trend - macd [5m]"
  */
 export declare function buildPaneLabel(args: BuildPaneLabelArgs): string;
 /**
@@ -105,11 +105,11 @@ export declare function buildPaneLabel(args: BuildPaneLabelArgs): string;
  *
  * Examples:
  *
- * - MarketDataData - ohlc (was: MarketDataData - ohlc - OHLC)
- * - MarketDataData - Volume > Buy (for faceted volume.buy)
- * - MarketDataData - Traders > Total (for faceted traders.total)
- * - MyStrategy - EMA (was: MyStrategy - ema - EMA)
- * - MyStrategy - macd - Histogram (was: MyStrategy - macd - MACD - Histogram)
+ * - Market data - ohlc (was: Market data - ohlc - OHLC)
+ * - Market data - Volume > Buy (for faceted volume.buy)
+ * - Market data - Counts > Total (for faceted counts.total)
+ * - Trend - EMA (was: Trend - ema - EMA)
+ * - Trend - macd - Histogram (was: Trend - macd - MACD - Histogram)
  */
 export declare function buildSeriesLabel(args: BuildSeriesLabelArgs): string;
 /**

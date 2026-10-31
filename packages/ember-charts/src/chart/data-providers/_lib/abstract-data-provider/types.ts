@@ -13,8 +13,8 @@ import type { Constructor } from 'type-fest';
  * DataProviderIdentifier
  *
  * - Canonical identity for a provider instance
- * - Type: 'ticker' | 'indicatorGroup' | ...
- * - Id: stable instance id (e.g. 'ticker', collection id, etc.)
+ * - Type: a provider-kind string
+ * - Id: stable instance id
  *
  * Consumers narrow identity by extending this structural interface.
  */

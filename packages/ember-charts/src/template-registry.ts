@@ -8,3 +8,5 @@
 // export default interface Registry {
 //   MyComponent: typeof MyComponent
 // }
+
+export {};

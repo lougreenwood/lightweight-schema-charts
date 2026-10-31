@@ -18,7 +18,7 @@ import type {
   Time,
 } from 'lightweight-charts';
 
-import { CanvasRenderingTarget2D } from 'fancy-canvas';
+import type { CanvasRenderingTarget2D } from 'fancy-canvas';
 
 import { getPaneLabelColor } from '../../theme/chart-theme';
 

@@ -6,7 +6,7 @@ import type { BaseChartDataSample, DataProviderCursor, DataStreamIdentifier, Dat
 import type { CreateDataProviderInvalidIdError, CreateDataProviderInvalidTypeError, DataProviderNoCursorForStreamError, DataProviderNoNewDataError, DataProviderUnknownStreamError, DataStreamHasNoDataError } from '../errors';
 import type { ChartLayoutFragmentData } from '../../schema/types';
 import type { TimeWindow } from './data-stream/time-window';
-import Result from 'true-myth/result';
+import type Result from 'true-myth/result';
 /**
  * AbstractDataProvider
  *
@@ -34,11 +34,11 @@ export declare abstract class AbstractDataProvider<TDataProviderStatic extends D
      */
     readonly identifier: InferDataProviderIdentifier<TDataProviderStatic>;
     /**
-     * Human-readable name for this provider instance (the subclasses should set this, e.g., "MarketDataData").
+     * Human-readable name for this provider instance (subclasses set this).
      */
     abstract readonly name: string;
     /**
-     * Public accessor for the data source (e.g., IndicatorGroupViewModel, MarketDataDataStreamModel).
+     * Public accessor for the data source.
      */
     get dataSource(): InferDataSource<TDataProviderStatic>;
     /**
@@ -52,7 +52,7 @@ export declare abstract class AbstractDataProvider<TDataProviderStatic extends D
      * Default layout for this provider's streams. One pane per stream, each with an empty series array.
      *
      * The schema fills in series detail (field paths, visibility) from presenters during assembly. Multi-stream providers
-     * (e.g., MarketDataData) override to group related streams into shared panes.
+     * override to group related streams into shared panes.
      */
     get defaultLayout(): ChartLayoutFragmentData;
     getDataState({ dataStreamIdentifier, }: {
