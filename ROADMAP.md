@@ -15,12 +15,13 @@ Engineering debt is listed with enough detail to act on. Product direction is li
 
 - **Extend value-handler coverage.** Consumer-registered handlers now interpret unknown projected values into validated scalar/OHLC points. Cover additional value families without adding domain types to the package.
 - **Make the public declarations self-sufficient.** Emitted declarations reference `NodeJS.CallSite`; a consumer currently needs `@types/node` and `skipLibCheck`. Trace the source, remove Node types from the public declaration program, and re-run the consumer check without `skipLibCheck`.
-- **Make the export map honest.** The `./*` subpath advertises declaration paths for internal modules that declaration emit does not produce. Either emit the full graph or narrow `exports` to curated subpaths, verified with `publint`/`attw` and a deep-import consumer.
-- **Exercise the real Git install.** Prove `github:<owner>/<repo>#<sha>&path:/packages/ember-charts` through pnpm's Git fetcher. Because GitHub resolves to a tarball, build output is committed; keep `prepare` for clone-based installs and keep the mounted `file:` variant only as a fallback.
+- **Make the export map honest.** The `./*` subpath advertises declaration paths for internal modules that declaration emit does not produce; `rollup.config.mjs` also publishes every source module. Narrow `publicEntrypoints` and `exports` to the real surface, verified with `publint`/`attw` and a deep-import consumer. Export the contracts consumers currently reimplement: `HasConfigValues`, `isBranchStructuralDescriptor`, and `ChartLayoutToggleSeriesError`.
+- **Keep the real Git install proven.** The pinned `github:<owner>/<repo>#<sha>&path:/packages/ember-charts` install is verified through pnpm's Git fetcher. Because GitHub resolves to a tarball, build output is committed; keep `prepare` for clone-based installs, keep the mounted `file:` variant only as a fallback, and keep the committed output in sync with the drift check below.
 - **Verify committed build output.** Add a CI check that rebuilding leaves `dist/` and `declarations/` unchanged, so the pinned tarball cannot silently drift from source.
-- **Finish the vendored-support decoupling.** Error constructors and the logger remain copies. Replace them with package-local support or an injected diagnostics port.
+- **Finish the vendored-support decoupling.** Only 13 of 71 vendored files are reachable from the package entry; the rest are dead. Remove the unused `shared-utils` modules, the two unused data-stream helpers, and the unused base helper. Replace the `@warp-drive/core` type in the data-stream `time-window` with a local structural type so the package does not depend on WarpDrive. Error constructors and the logger remain the live copies; decide whether the public error contract is structural or shared, and inject the diagnostics port.
+- **Remove the presenter-level `defaultLayout`.** The provider's `defaultLayout` is the canonical layout fragment; the schema reads only that, and the presenter member is a migration leftover. Correct the stale comments and guides that call presenter fragments canonical, then remove the member from the contract/base.
 - **Prove the provider create-error path.** The fixture returns `never` for create failures. Use a real error type so the public base's consumer-visible failure branch is exercised.
-- **Prefer factories over abstract bases.** The provider and presenter contracts are structural, so the shipped abstract classes are an implementation choice, not part of the public shape. Evaluate factory functions that close over explicit state — or a small state object plus pure helpers — as the primary construction API once consumer registrations stabilize. Nice-to-have; not a cutover blocker. See the construction example below.
+- **Prefer factories over abstract bases.** The provider and presenter contracts are structural, so the shipped abstract classes are an implementation choice, not part of the public shape. Evaluate factory functions that close over explicit state — or a small state object plus pure helpers — as the primary construction API once consumer registrations stabilize. Cleanup slice, not a feature. See the construction example below. Known places this removes: the provider/presenter `staticSide` fields and static generic threading; the presenter `defaultLayout` member; consumer coordinators that reach protected projection hooks; consumer casts from a broad data source to a specific indicator; suppressed constructor errors for presenters that already exist; consumer registries that cast static classes to the provider-static contract; consumer option mappers that cast provider options to a shared option type; and redundant consumer-side marker interfaces.
 
 ### Construction API: factories instead of base classes
 
@@ -104,10 +105,12 @@ Costs and constraints:
 - The shared behavior in both bases — cursor storage, batch finalization, descriptor caching, default field selection, projection orchestration — must be extracted into functions before any class can be replaced.
 - The presenter base uses `trackedMap` for descriptor caching; the closure must preserve that reactivity exactly, or empty-to-populated updates regress.
 - It touches every provider and presenter in the consumer, so it needs its own test pass.
-- It is post-cutover work. Do not reshape construction while the application is still moving onto the package.
+- The cutover is complete, so this can be scheduled as a cleanup slice. It still needs its own test pass; do not land it as a drive-by refactor.
 - **Document the plugin boundary.** Provider and presenter are the only integration surface. Make that explicit in the architecture overview, with the reference adapter as the example.
 
 ## Core extraction
+
+Deferred until after the client milestone. The package remains Ember-first; do not start the neutral core extraction now.
 
 - **Move the neutral renderer into the core.** Diff, adapters, converters, lifecycle, and explicit theme and label inputs belong in `@lightweight-schema-charts/core`.
 - **Prove the core without Ember.** A plain-DOM consumer must render and update before any framework-neutral claim is made.
@@ -127,6 +130,7 @@ No chart tests were ported from the application. The suite is new work: one acce
 - **Unit.** Snapshot capture and diff precedence, including the cases that must do nothing; conversion for each series kind; projection for each point shape; layout assembly from fragments and overlay; label composition.
 - **Contract conformance.** A reusable suite that any provider and presenter can run against its own implementations, so a consumer can prove it satisfies the contract rather than discovering mismatches at runtime.
 - **Acceptance.** The current test covers mount, one incremental update, custom formatting, handler-error notification, and DOM removal. Add rebuild and rename, failure-then-retry after a rejected value, multi-pane composition, visibility toggles, rapid mount and unmount, and teardown with no post-destroy callbacks.
+- **Queued readiness coverage.** The partial-group failure, fetch failure, and retry tests queued at package readiness are still missing; add them with the acceptance extension.
 - **Lifecycle.** Assert chart disposal once implemented, not merely DOM removal.
 - **Regression.** One deterministic synthetic fixture per case, so a failure reproduces exactly.
 - **Environment.** Runs in the repository container, headless and deterministic, alongside the existing acceptance test.

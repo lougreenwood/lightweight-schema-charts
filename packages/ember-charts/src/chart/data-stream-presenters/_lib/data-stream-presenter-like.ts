@@ -100,8 +100,8 @@ interface BaseDataStreamPresenterLike<
   readonly dataStreamIdentifier: TDataStreamIdentifier;
 
   /**
-   * Default layout fragment (Level 1) for this presenter's data stream. Used by the reactive schema to assemble the
-   * chart layout. Describes panes and series groups with default visibility derived from defaultSeries.
+   * Legacy member: the provider's `defaultLayout` is the canonical fragment and the only one the schema reads. This
+   * member is not used by the schema and is scheduled for removal in the factory refactor.
    */
   readonly defaultLayout: ChartLayoutFragmentData;
 

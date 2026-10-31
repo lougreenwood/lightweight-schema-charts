@@ -14,7 +14,9 @@ A presenter describes one stream: how it is named, which series fields it expose
 | `defaultSeries`         | Field paths visible when the layout first assembles       |
 | `describeFields()`      | The same descriptor set, for consumers that prefer a call |
 | `projectField()`        | Turns samples into series points for one field            |
-| `defaultLayout`         | Layout fragment used by the provider                      |
+| `defaultLayout`         | Legacy — the provider owns layout; not read by the schema |
+
+The interface still declares `defaultLayout`; prefer the base class, which supplies it. The provider's `defaultLayout` is canonical, and the presenter member is scheduled for removal in the factory refactor.
 
 ## Descriptors
 

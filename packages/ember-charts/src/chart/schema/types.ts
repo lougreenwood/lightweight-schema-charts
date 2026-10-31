@@ -55,7 +55,7 @@ export type BranchStructuralDescriptor<
 /**
  * ChartLayoutData
  *
- * Top-level layout tree describing the full chart structure. Assembled from presenter fragments (Level 2) and mutated
+ * Top-level layout tree describing the full chart structure. Assembled from provider fragments (Level 2) and mutated
  * by user actions (Level 3). Group identity is carried explicitly per series group.
  */
 export type ChartLayoutData = Readonly<{
@@ -65,8 +65,8 @@ export type ChartLayoutData = Readonly<{
 /**
  * ChartLayoutFragmentData
  *
- * A presenter's contribution to the chart layout (Level 1). Structurally identical to a partial ChartLayoutData but
- * semantically represents a single presenter's default layout before assembly.
+ * A provider's contribution to the chart layout (Level 1). Structurally identical to a partial ChartLayoutData but
+ * semantically represents a single provider's default layout before assembly.
  */
 export type ChartLayoutFragmentData = Readonly<{
   panes: ReadonlyArray<PaneLayout>;
