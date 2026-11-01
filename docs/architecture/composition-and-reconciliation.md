@@ -69,7 +69,7 @@ Snapshots are captured after apply because that is the state the next cycle will
 
 The chart is created once, on first reconciliation, and reused. Scheduled work is cancelled when the host is destroyed.
 
-Teardown currently removes series and panes and cancels scheduled work. It does not dispose the chart instance. That is a known gap tracked in the roadmap: removing the host element removes the canvas but leaves the chart object alive.
+Teardown cancels scheduled work and disposes the chart instance exactly once. Removing the host element also removes the canvas.
 
 ## Related documents
 

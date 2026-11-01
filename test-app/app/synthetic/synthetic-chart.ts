@@ -15,6 +15,13 @@ import {
   SyntheticProvider,
 } from 'test-app/synthetic/synthetic-provider';
 
+export const chartLifecycle = { createdCount: 0, removeCount: 0 };
+
+export function resetChartLifecycle(): void {
+  chartLifecycle.createdCount = 0;
+  chartLifecycle.removeCount = 0;
+}
+
 export function createSyntheticChart({
   candleCount,
   handlerId = 'wrapped-candle',

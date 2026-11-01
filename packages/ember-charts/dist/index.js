@@ -3909,16 +3909,18 @@ class ChartLwcAdapterModifier extends Modifier {
    * document theme class changes.
    */
   applyTheme = () => {
-    if (!this.#chart) return;
+    if (this.#disposed || !this.#chart) return;
     this.#chart.applyOptions(getChartTheme());
   };
   modify(element, [state, seriesAdapterRegistry, domainContext], {
     onReady,
     onError
   }) {
+    if (this.#disposed) return;
     this.#onError = onError;
     // Schedule LWC DOM mutations after render
     this.#scheduleWork(() => {
+      if (this.#disposed) return;
       // Create chart on first call
       if (!this.#chart) {
         this.#chart = createChart(element, {
@@ -3956,11 +3958,24 @@ class ChartLwcAdapterModifier extends Modifier {
       }
     });
   }
+  #disposeChart() {
+    if (this.#disposed) return;
+    this.#disposed = true;
+    const chart = this.#chart;
+    this.#chart = undefined;
+    chart?.remove();
+    this.#paneStates.clear();
+    this.#previousSnapshots.clear();
+    this.#needsBackfill.clear();
+    this.#previousDomainContext = undefined;
+    this.#hasAppliedInitialFocusRange = false;
+  }
 
   /**
    * The LWC chart instance, created on first modify() call.
    */
   #chart;
+  #disposed = false;
   #onError;
 
   /**
@@ -3993,8 +4008,14 @@ class ChartLwcAdapterModifier extends Modifier {
 
   /**
    * Lifecycle-aware scheduler that cancels pending work on destruction.
+   *
+   * Disposal registers before the scheduler so LIFO destructor order cancels queued work first, then disposes the chart.
    */
-  #scheduleWork = createScheduleWorkHelper(this);
+  #scheduleWork = this.#makeScheduleWork();
+  #makeScheduleWork() {
+    registerDestructor(this, () => this.#disposeChart());
+    return createScheduleWorkHelper(this);
+  }
 
   /**
    * Add a new group: find or create the correct pane from the enriched state, then build series with full backfill.

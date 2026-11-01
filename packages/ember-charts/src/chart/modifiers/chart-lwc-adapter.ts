@@ -85,6 +85,7 @@ import { getChartTheme } from '../theme/chart-theme';
 import { buildPaneLabel, buildSeriesTitle } from '../utils/labels';
 import pinoLogger from '../../vendor/utils-base/logger/pino-logger';
 import { createScheduleWorkHelper } from '../../vendor/utils-base/schedule-after-render';
+import { registerDestructor } from '@ember/destroyable';
 import Modifier from 'ember-modifier';
 import { createChart, TickMarkType } from 'lightweight-charts';
 
@@ -114,7 +115,7 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
    * document theme class changes.
    */
   applyTheme = (): void => {
-    if (!this.#chart) return;
+    if (this.#disposed || !this.#chart) return;
     this.#chart.applyOptions(getChartTheme());
   };
 
@@ -133,9 +134,11 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
       onError?: (failure: SeriesValueFailure) => void;
     },
   ): void {
+    if (this.#disposed) return;
     this.#onError = onError;
     // Schedule LWC DOM mutations after render
     this.#scheduleWork(() => {
+      if (this.#disposed) return;
       // Create chart on first call
       if (!this.#chart) {
         this.#chart = createChart(element, {
@@ -168,10 +171,26 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
     });
   }
 
+  #disposeChart(): void {
+    if (this.#disposed) return;
+    this.#disposed = true;
+
+    const chart = this.#chart;
+    this.#chart = undefined;
+    chart?.remove();
+
+    this.#paneStates.clear();
+    this.#previousSnapshots.clear();
+    this.#needsBackfill.clear();
+    this.#previousDomainContext = undefined;
+    this.#hasAppliedInitialFocusRange = false;
+  }
+
   /**
    * The LWC chart instance, created on first modify() call.
    */
   #chart: IChartApi | undefined;
+  #disposed = false;
   #onError: ((failure: SeriesValueFailure) => void) | undefined;
 
   /**
@@ -204,8 +223,15 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
 
   /**
    * Lifecycle-aware scheduler that cancels pending work on destruction.
+   *
+   * Disposal registers before the scheduler so LIFO destructor order cancels queued work first, then disposes the chart.
    */
-  readonly #scheduleWork = createScheduleWorkHelper(this);
+  readonly #scheduleWork = this.#makeScheduleWork();
+
+  #makeScheduleWork(): (callback: () => void) => void {
+    registerDestructor(this, () => this.#disposeChart());
+    return createScheduleWorkHelper(this);
+  }
 
   /**
    * Add a new group: find or create the correct pane from the enriched state, then build series with full backfill.

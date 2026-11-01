@@ -104,10 +104,9 @@ Every workspace package with its own dependencies needs a `node_modules` named v
 
 ## Known limitations
 
-- The modifier removes series and panes on teardown but does not dispose the chart instance.
 - The default build emits runtime modules and declarations. Git consumers must select the addon subdirectory and allow its build scripts.
 - Presenters may emit arbitrary values; a selected handler returns typed conversion results and supplies an optional custom price format.
-- One acceptance test covers a wrapped-value rendering path, updates, formatting, error notification, and DOM removal. Unit tests cover handler dispatch and validation. Multi-pane layouts and chart disposal remain unproven.
+- One acceptance test covers a wrapped-value rendering path, updates, formatting, error notification, DOM removal, and chart disposal. Unit tests cover handler dispatch and validation. Multi-pane layouts remain unproven.
 
 See [ROADMAP.md](ROADMAP.md) for the engineering work behind these limitations and for the product direction still to be specified.
 

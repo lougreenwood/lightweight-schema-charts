@@ -37,16 +37,16 @@ Lightweight Charts
 
 **Schema.** Derives chart state from layout and provider membership. It stores no duplicate copy of that state, so stale state is structurally impossible. It owns layout composition: default fragments from providers, then the consumer's visibility and ordering overlay.
 
-**Modifier.** Owns the chart instance and applies state changes. It creates the chart once, schedules work after render, and reconciles additions, removals, rebuilds, updates, and renames.
+**Modifier.** Owns the chart instance and applies state changes. It creates the chart once, schedules work after render, reconciles additions, removals, rebuilds, updates, and renames, and disposes the chart on teardown.
 
 ## Contracts
 
-| Contract | Direction | Purpose |
-| --- | --- | --- |
-| `DataProviderLike` | consumer → package | Streams, cursor, fetching, data state, group identity |
-| `DataStreamPresenterLike` | consumer → package | Names, descriptors, default fields, projection |
-| `DataStreamPresenterFactory` | consumer → package | Maps the consumer's provider types to presenters |
-| `ChartState` | package internal | Panes, groups, series fields, data state |
+| Contract                     | Direction          | Purpose                                               |
+| ---------------------------- | ------------------ | ----------------------------------------------------- |
+| `DataProviderLike`           | consumer → package | Streams, cursor, fetching, data state, group identity |
+| `DataStreamPresenterLike`    | consumer → package | Names, descriptors, default fields, projection        |
+| `DataStreamPresenterFactory` | consumer → package | Maps the consumer's provider types to presenters      |
+| `ChartState`                 | package internal   | Panes, groups, series fields, data state              |
 
 ## Related documents
 

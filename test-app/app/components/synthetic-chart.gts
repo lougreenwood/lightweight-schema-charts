@@ -4,7 +4,10 @@ import { tracked } from '@glimmer/tracking';
 import { ChartLwcAdapterModifier } from '@lightweight-schema-charts/ember';
 import type { SeriesValueFailure } from '@lightweight-schema-charts/ember';
 import type { IChartApi } from 'lightweight-charts';
-import { createSyntheticChart } from 'test-app/synthetic/synthetic-chart';
+import {
+  createSyntheticChart,
+  chartLifecycle,
+} from 'test-app/synthetic/synthetic-chart';
 
 export default class SyntheticChart extends Component {
   @tracked chart = createSyntheticChart({ candleCount: 120 });
@@ -15,6 +18,12 @@ export default class SyntheticChart extends Component {
 
   handleReady = ({ chart }: { chart: IChartApi }): void => {
     this.#chartApi = chart;
+    chartLifecycle.createdCount += 1;
+    const remove = chart.remove.bind(chart);
+    chart.remove = () => {
+      chartLifecycle.removeCount += 1;
+      remove();
+    };
   };
   handleError = ({ error }: SeriesValueFailure): void => {
     this.lastError = error.errorCode;

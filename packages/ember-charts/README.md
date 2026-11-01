@@ -4,7 +4,7 @@ Ember host for [Lightweight Schema Charts](../..). It builds a chart from declar
 
 ## Status
 
-The package renders and is covered by an acceptance test for mount, wrapped-value conversion, an incremental update, custom formatting, handler-error notification, and teardown. Its public surface is still provisional: the schema factory, contracts, and modifier are usable, but the API may change while the neutral core is extracted.
+The package renders and is covered by an acceptance test for mount, wrapped-value conversion, an incremental update, custom formatting, handler-error notification, teardown, and disposal. Its public surface is still provisional: the schema factory, contracts, and modifier are usable, but the API may change while the neutral core is extracted.
 
 ## What it provides
 
@@ -63,7 +63,6 @@ The modifier takes the schema state, an adapter registry, and a domain context o
 
 ## Known limitations
 
-- Teardown removes series and panes but does not call `chart.remove()`; the chart instance is not disposed.
 - `build` emits declarations before runtime modules; failed declaration checks stop the build and leave no partial declarations.
 - The package exports only the root entry, the template registry, and the addon main; internal modules are not importable.
 

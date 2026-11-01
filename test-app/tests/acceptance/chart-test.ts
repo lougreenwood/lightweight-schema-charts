@@ -1,9 +1,17 @@
 import { click, currentURL, visit, waitUntil } from '@ember/test-helpers';
 import { setupApplicationTest } from 'test-app/tests/helpers';
+import {
+  chartLifecycle,
+  resetChartLifecycle,
+} from 'test-app/synthetic/synthetic-chart';
 import { module, test } from 'qunit';
 
 module('Acceptance | synthetic chart', function (hooks) {
   setupApplicationTest(hooks);
+
+  hooks.beforeEach(() => {
+    resetChartLifecycle();
+  });
 
   test('mounts, updates and tears down', async function (assert) {
     await visit('/chart');
@@ -77,5 +85,26 @@ module('Acceptance | synthetic chart', function (hooks) {
     assert
       .dom('canvas')
       .doesNotExist('chart is removed from the DOM on teardown');
+    assert.strictEqual(chartLifecycle.createdCount, 1, 'chart created once');
+    assert.strictEqual(
+      chartLifecycle.removeCount,
+      1,
+      'chart disposed exactly once'
+    );
+  });
+
+  test('rapid mount and unmount leaves no live chart', async function (assert) {
+    await visit('/chart');
+    await visit('/');
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve())
+    );
+
+    assert.strictEqual(
+      chartLifecycle.createdCount,
+      chartLifecycle.removeCount,
+      'every created chart is disposed'
+    );
+    assert.strictEqual(currentURL(), '/', 'returned to the home route');
   });
 });

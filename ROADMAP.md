@@ -6,8 +6,6 @@ Engineering debt is listed with enough detail to act on. Product direction is li
 
 ## Correctness and lifecycle
 
-- **Dispose the chart on teardown.** The modifier removes series and panes but never calls `chart.remove()`. Add an exact-once destruction path and assert disposal rather than only DOM removal.
-- **Cancel scheduled work before disposal.** The modifier schedules DOM work after render. Ensure queued work cannot touch a destroyed chart, and cover rapid mount/unmount.
 - **Prove incremental updates stay incremental.** The acceptance test asserts series identity across an update. Extend that to rebuild-triggering changes so a regression to rebuild-on-every-change still fails.
 - **Handle zero-size hosts.** `autoSize` chart creation assumes a laid-out element. Define behaviour when the host has no dimensions yet.
 
@@ -140,7 +138,6 @@ Defects present in the current implementation. Each is open until the linked wor
 
 | Defect                                               | Effect                                                                          | Where                                  |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------- |
-| The chart instance is never disposed                 | Memory and observers retained after unmount; DOM removal hides it               | `chart/modifiers/chart-lwc-adapter.ts` |
 | A series is skipped when no adapter matches its kind | The series is missing with only a log entry; no visible or programmatic signal  | `chart/modifiers/chart-lwc-adapter.ts` |
 | A zero-size host has no defined behaviour            | `autoSize` may produce a chart with no dimensions until the element is laid out | `chart/modifiers/chart-lwc-adapter.ts` |
 
