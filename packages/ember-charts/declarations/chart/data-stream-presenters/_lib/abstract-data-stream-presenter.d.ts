@@ -1,7 +1,7 @@
 import type { BaseChartDataSample } from '../../data-providers/_lib/data-stream/types';
 import type { DataProviderLike } from '../../data-providers/_lib/data-provider-like';
 import type { DataStreamIdentifier } from '../../data-providers/_lib/data-stream/types';
-import type { ChartLayoutFragmentData, BaseStructuralDescriptor, SeriesPath } from '../../schema/types';
+import type { BaseStructuralDescriptor, SeriesPath } from '../../schema/types';
 import type { ProjectedSeriesPoint } from './abstract-data-stream-presenter/types';
 import type { SeriesType } from '../../series-adapters/_lib/_registry/types';
 import type { Result } from 'true-myth/result';
@@ -53,16 +53,6 @@ export declare abstract class AbstractDataStreamPresenter<TDataProvider extends 
      * Default field selection derived from descriptors (no samples, no fetch).
      */
     get defaultSeries(): ReadonlySet<SeriesPath>;
-    /**
-     * Default layout fragment for this presenter's data stream.
-     *
-     * Produces a single pane with a single series group containing all known series fields. Visibility is determined by
-     * `defaultSeries` — fields in that set are visible, all others are hidden.
-     *
-     * Subclasses MAY override to produce multi-pane or multi-group layouts when their data naturally maps to separate
-     * panes (e.g., OHLC in main pane, volume in a separate pane).
-     */
-    get defaultLayout(): ChartLayoutFragmentData;
     /**
      * Whether this presenter's data stream supports configuration.
      *

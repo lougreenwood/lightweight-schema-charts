@@ -1,11 +1,7 @@
 import type { BaseChartDataSample } from '../../data-providers/_lib/data-stream/types';
 import type { DataProviderLike } from '../../data-providers/_lib/data-provider-like';
 import type { DataStreamIdentifier } from '../../data-providers/_lib/data-stream/types';
-import type {
-  ChartLayoutFragmentData,
-  BaseStructuralDescriptor,
-  SeriesPath,
-} from '../../schema/types';
+import type { BaseStructuralDescriptor, SeriesPath } from '../../schema/types';
 import type { ProjectedSeriesPoint } from './abstract-data-stream-presenter/types';
 import type { SeriesType } from '../../series-adapters/_lib/_registry/types';
 import type { Result } from 'true-myth/result';
@@ -121,47 +117,6 @@ export abstract class AbstractDataStreamPresenter<
     for (const d of rootDescriptors) visit(d, false);
 
     return selections;
-  }
-
-  /**
-   * Default layout fragment for this presenter's data stream.
-   *
-   * Produces a single pane with a single series group containing all known series fields. Visibility is determined by
-   * `defaultSeries` — fields in that set are visible, all others are hidden.
-   *
-   * Subclasses MAY override to produce multi-pane or multi-group layouts when their data naturally maps to separate
-   * panes (e.g., OHLC in main pane, volume in a separate pane).
-   */
-  get defaultLayout(): ChartLayoutFragmentData {
-    const visiblePaths = this.defaultSeries;
-
-    const allSeriesPaths = this.#collectAllSeriesPaths({
-      descriptors: this.structuralDescriptors,
-    });
-
-    const series = allSeriesPaths
-      .values()
-      .map((fieldPath: SeriesPath) => ({
-        fieldPath,
-        visible: visiblePaths.has(fieldPath),
-      }))
-      .toArray();
-
-    return {
-      panes: [
-        {
-          seriesGroups: [
-            {
-              groupId: `${this._dataStreamIdentifier.dataProviderIdentifier.id}::${this._dataStreamIdentifier.type}`,
-              series,
-              stableLayoutKey:
-                this._dataStreamIdentifier.dataProviderIdentifier.id,
-              streamType: this._dataStreamIdentifier.type,
-            },
-          ],
-        },
-      ],
-    };
   }
 
   /**
@@ -622,30 +577,5 @@ export abstract class AbstractDataStreamPresenter<
         },
       });
     }, new Set<BaseStructuralDescriptor<TDataStreamIdentifier>>());
-  }
-
-  /**
-   * Recursively collect all series field paths from a set of descriptors.
-   *
-   * Walks structural nodes to extract leaf series paths for layout assembly.
-   */
-  #collectAllSeriesPaths({
-    descriptors,
-  }: {
-    descriptors: ReadonlySet<BaseStructuralDescriptor<TDataStreamIdentifier>>;
-  }): Set<SeriesPath> {
-    return descriptors.values().reduce((paths, descriptor) => {
-      if (descriptor.kind === 'series') {
-        paths.add(descriptor.identifier.fieldPath);
-      } else {
-        const childPaths = this.#collectAllSeriesPaths({
-          descriptors: descriptor.children,
-        });
-        for (const path of childPaths) {
-          paths.add(path);
-        }
-      }
-      return paths;
-    }, new Set<SeriesPath>());
   }
 }

@@ -2,6 +2,8 @@ export declare const lightweightSchemaChartsEmberPackage = "@lightweight-schema-
 export { createReactiveChartSchema } from './chart/schema/create-reactive-chart-schema';
 export { ReactiveChartSchema } from './chart/schema/schema-reactive';
 export { ChartLayout } from './chart/schema/chart-layout';
+export type { ChartLayoutToggleSeriesError } from './chart/schema/chart-layout';
+export { isBranchStructuralDescriptor } from './chart/schema/utils';
 export { AbstractDataProvider } from './chart/data-providers/_lib/abstract-data-provider';
 export { validateDataProviderIdentifier } from './chart/data-providers/_lib/abstract-data-provider';
 export { AbstractDataStreamPresenter } from './chart/data-stream-presenters/_lib/abstract-data-stream-presenter';
@@ -17,7 +19,7 @@ export type { ChartDomainContext } from './chart/modifiers/chart-lwc-adapter/typ
 export type { SeriesType, NumericSeriesType, OhlcSeriesType, } from './chart/series-adapters/_lib/_registry/types';
 export type { SeriesAdapterInternalPoint, ChartTimeSeriesPointNumber, ChartTimeSeriesPointOhlc, SeriesAdapter, SeriesAdapterLike, } from './chart/series-adapters/_lib/_adapter';
 export type { AppError, AppErrorArgs, AppErrorLike, GenericErrorArgs, } from './vendor/shared-utils/errors/app-error';
-export type { DataStreamPresenterLike } from './chart/data-stream-presenters/_lib/data-stream-presenter-like';
+export type { DataStreamPresenterLike, HasConfigValues, } from './chart/data-stream-presenters/_lib/data-stream-presenter-like';
 export type { DataStreamPresenterFactory } from './chart/data-stream-presenters/_lib/data-stream-presenter-registry/types';
 export type { SeriesValueHandler, SeriesValueHandlers, SeriesValueFailure, InterpretedOhlc, } from './chart/series-adapters/_lib/value-handler/types';
 export type { SeriesValueHandlerNotFoundError, SeriesValueNumberValidationError, SeriesValueOhlcValidationError, SeriesValueOhlcConverterMissingError, SeriesValuePointsEmptyError, } from './chart/series-adapters/_lib/value-handler/errors';

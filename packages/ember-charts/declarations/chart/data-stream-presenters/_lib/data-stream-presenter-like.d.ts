@@ -1,6 +1,6 @@
 import type { DataProviderLike } from '../../data-providers/_lib/data-provider-like';
 import type { BaseChartDataSample, DataStreamIdentifier } from '../../data-providers/_lib/data-stream/types';
-import type { ChartLayoutFragmentData, BaseStructuralDescriptor, SeriesPath } from '../../schema/types';
+import type { BaseStructuralDescriptor, SeriesPath } from '../../schema/types';
 import type { ProjectedSeriesPoint } from './abstract-data-stream-presenter/types';
 import type { Result } from 'true-myth/result';
 /**
@@ -75,11 +75,6 @@ interface BaseDataStreamPresenterLike<TDataProvider extends DataProviderLike, TD
      * The data stream identifier for this presenter.
      */
     readonly dataStreamIdentifier: TDataStreamIdentifier;
-    /**
-     * Legacy member: the provider's `defaultLayout` is the canonical fragment and the only one the schema reads. This
-     * member is not used by the schema and is scheduled for removal in the factory refactor.
-     */
-    readonly defaultLayout: ChartLayoutFragmentData;
     /**
      * Default series to select on initialization (derived from descriptors). Rules:
      *

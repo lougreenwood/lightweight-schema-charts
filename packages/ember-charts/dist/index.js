@@ -1226,6 +1226,58 @@ function createReactiveChartSchema({
 }
 
 /**
+ * Check if two DataStreamIdentifier objects are equal.
+ *
+ * Performs deep equality check on all four identifier fields: dataProviderIdentifier.type, dataProviderIdentifier.id,
+ * type, and id.
+ */
+
+/**
+ * Type guard for CompleteLeafStructuralDescriptor
+ */
+function isCompleteLeafStructuralDescriptor(descriptor) {
+  return descriptor.kind === 'series' && 'seriesKind' in descriptor;
+}
+
+/**
+ * Type guard for BranchStructuralDescriptor
+ */
+function isBranchStructuralDescriptor(descriptor) {
+  return descriptor.kind === 'structural';
+}
+
+/**
+ * Recursively search a descriptor tree for a descriptor matching the given fieldPath.
+ *
+ * Returns the matched descriptor and its parent (if nested under a branch), or undefined if not found.
+ */
+function findDescriptorWithParent({
+  descriptors,
+  fieldPath,
+  parent
+}) {
+  for (const descriptor of descriptors) {
+    if (descriptor.identifier.fieldPath === fieldPath) {
+      return {
+        descriptor,
+        parent
+      };
+    }
+    if (isBranchStructuralDescriptor(descriptor)) {
+      const found = findDescriptorWithParent({
+        descriptors: descriptor.children,
+        fieldPath,
+        parent: descriptor
+      });
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
  * EmptyResultError instance type - use this in type positions.
  *
  * @example Type NoMatchingUsersError = EmptyResultError<{ errorCode: 'NO_MATCHING_USERS'; message: string; meta?: {
@@ -1777,58 +1829,6 @@ function validateDataProviderIdentifier({
 }
 
 /**
- * Check if two DataStreamIdentifier objects are equal.
- *
- * Performs deep equality check on all four identifier fields: dataProviderIdentifier.type, dataProviderIdentifier.id,
- * type, and id.
- */
-
-/**
- * Type guard for CompleteLeafStructuralDescriptor
- */
-function isCompleteLeafStructuralDescriptor(descriptor) {
-  return descriptor.kind === 'series' && 'seriesKind' in descriptor;
-}
-
-/**
- * Type guard for BranchStructuralDescriptor
- */
-function isBranchStructuralDescriptor(descriptor) {
-  return descriptor.kind === 'structural';
-}
-
-/**
- * Recursively search a descriptor tree for a descriptor matching the given fieldPath.
- *
- * Returns the matched descriptor and its parent (if nested under a branch), or undefined if not found.
- */
-function findDescriptorWithParent({
-  descriptors,
-  fieldPath,
-  parent
-}) {
-  for (const descriptor of descriptors) {
-    if (descriptor.identifier.fieldPath === fieldPath) {
-      return {
-        descriptor,
-        parent
-      };
-    }
-    if (isBranchStructuralDescriptor(descriptor)) {
-      const found = findDescriptorWithParent({
-        descriptors: descriptor.children,
-        fieldPath,
-        parent: descriptor
-      });
-      if (found) {
-        return found;
-      }
-    }
-  }
-  return undefined;
-}
-
-/**
  * Label Utilities
  *
  * Provides utility functions for generating labels for chart series and panes. Implements redundancy removal logic to
@@ -2121,36 +2121,6 @@ class AbstractDataStreamPresenter {
     };
     for (const d of rootDescriptors) visit(d, false);
     return selections;
-  }
-
-  /**
-   * Default layout fragment for this presenter's data stream.
-   *
-   * Produces a single pane with a single series group containing all known series fields. Visibility is determined by
-   * `defaultSeries` — fields in that set are visible, all others are hidden.
-   *
-   * Subclasses MAY override to produce multi-pane or multi-group layouts when their data naturally maps to separate
-   * panes (e.g., OHLC in main pane, volume in a separate pane).
-   */
-  get defaultLayout() {
-    const visiblePaths = this.defaultSeries;
-    const allSeriesPaths = this.#collectAllSeriesPaths({
-      descriptors: this.structuralDescriptors
-    });
-    const series = allSeriesPaths.values().map(fieldPath => ({
-      fieldPath,
-      visible: visiblePaths.has(fieldPath)
-    })).toArray();
-    return {
-      panes: [{
-        seriesGroups: [{
-          groupId: `${this._dataStreamIdentifier.dataProviderIdentifier.id}::${this._dataStreamIdentifier.type}`,
-          series,
-          stableLayoutKey: this._dataStreamIdentifier.dataProviderIdentifier.id,
-          streamType: this._dataStreamIdentifier.type
-        }]
-      }]
-    };
   }
 
   /**
@@ -2550,29 +2520,6 @@ class AbstractDataStreamPresenter {
           fieldPath
         }
       });
-    }, new Set());
-  }
-
-  /**
-   * Recursively collect all series field paths from a set of descriptors.
-   *
-   * Walks structural nodes to extract leaf series paths for layout assembly.
-   */
-  #collectAllSeriesPaths({
-    descriptors
-  }) {
-    return descriptors.values().reduce((paths, descriptor) => {
-      if (descriptor.kind === 'series') {
-        paths.add(descriptor.identifier.fieldPath);
-      } else {
-        const childPaths = this.#collectAllSeriesPaths({
-          descriptors: descriptor.children
-        });
-        for (const path of childPaths) {
-          paths.add(path);
-        }
-      }
-      return paths;
     }, new Set());
   }
 }
@@ -4904,5 +4851,5 @@ class ChartLwcAdapterModifier extends Modifier {
 
 const lightweightSchemaChartsEmberPackage = '@lightweight-schema-charts/ember';
 
-export { AbstractDataProvider, AbstractDataStreamPresenter, ChartLayout, ChartLwcAdapterModifier, ReactiveChartSchema, SeriesAdapterRegistry, adapters, createReactiveChartSchema, interpretProjectedPoints, lightweightSchemaChartsEmberPackage, numericSeriesValueHandler, validateDataProviderIdentifier, validateSeriesNumber, validateSeriesOhlc };
+export { AbstractDataProvider, AbstractDataStreamPresenter, ChartLayout, ChartLwcAdapterModifier, ReactiveChartSchema, SeriesAdapterRegistry, adapters, createReactiveChartSchema, interpretProjectedPoints, isBranchStructuralDescriptor, lightweightSchemaChartsEmberPackage, numericSeriesValueHandler, validateDataProviderIdentifier, validateSeriesNumber, validateSeriesOhlc };
 //# sourceMappingURL=index.js.map

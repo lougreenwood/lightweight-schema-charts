@@ -4,6 +4,8 @@ export const lightweightSchemaChartsEmberPackage =
 export { createReactiveChartSchema } from './chart/schema/create-reactive-chart-schema';
 export { ReactiveChartSchema } from './chart/schema/schema-reactive';
 export { ChartLayout } from './chart/schema/chart-layout';
+export type { ChartLayoutToggleSeriesError } from './chart/schema/chart-layout';
+export { isBranchStructuralDescriptor } from './chart/schema/utils';
 export { AbstractDataProvider } from './chart/data-providers/_lib/abstract-data-provider';
 export { validateDataProviderIdentifier } from './chart/data-providers/_lib/abstract-data-provider';
 export { AbstractDataStreamPresenter } from './chart/data-stream-presenters/_lib/abstract-data-stream-presenter';
@@ -71,7 +73,10 @@ export type {
   AppErrorLike,
   GenericErrorArgs,
 } from './vendor/shared-utils/errors/app-error';
-export type { DataStreamPresenterLike } from './chart/data-stream-presenters/_lib/data-stream-presenter-like';
+export type {
+  DataStreamPresenterLike,
+  HasConfigValues,
+} from './chart/data-stream-presenters/_lib/data-stream-presenter-like';
 export type { DataStreamPresenterFactory } from './chart/data-stream-presenters/_lib/data-stream-presenter-registry/types';
 export type {
   SeriesValueHandler,

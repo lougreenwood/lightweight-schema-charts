@@ -8,25 +8,26 @@ The package renders and is covered by an acceptance test for mount, wrapped-valu
 
 ## What it provides
 
-| Export                                                                     | Purpose                                                                              |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `createReactiveChartSchema`                                                | Builds the chart schema from consumer-supplied providers and presenters              |
-| `ReactiveChartSchema`                                                      | The schema class, exposing `state`, layout, and series toggling                      |
-| `SeriesAdapterRegistry`                                                    | Looks up a series adapter by series type                                             |
-| `adapters`                                                                 | The six built-in adapters: area, bar, baseline, candlestick, histogram, line         |
-| `ChartLwcAdapterModifier`                                                  | Ember modifier that renders and reconciles chart state                               |
-| `DataProviderLike`                                                         | Contract a consumer implements for each data source                                  |
-| `DataStreamPresenterLike`                                                  | Contract describing a stream, its fields, and its projection                         |
-| `DataStreamPresenterFactory`                                               | Plugin seam mapping a consumer's provider types to presenters                        |
-| `AbstractDataProvider`, `AbstractDataStreamPresenter`                      | Optional generic bases for consumer implementations; all type arguments are required |
-| Layout, descriptor, stream, sample, and identity types                     | Public contracts for composing the schema and its inputs                             |
-| `SeriesValueHandler`, `SeriesValueHandlers`                                | Typed conversion and formatting supplied by the consumer                             |
-| `ProjectedSeriesPoint`, `SeriesValueFailure`                               | Unknown-valued projection input and modifier error notification                      |
-| `validateSeriesNumber`, `validateSeriesOhlc`                               | Finite numeric validation for handler implementations                                |
-| `numericSeriesValueHandler`                                                | Built-in `numeric` handler; also selected when a descriptor names no handler         |
-| `interpretProjectedPoints`                                                 | Shared batch interpreter used by the modifier; exported for host-side testing        |
-| `ChartLayout`                                                              | Layout composition and visibility overlay used by the schema                         |
-| `SeriesValueHandlerNotFoundError` and the other `SeriesValue*` error types | Typed handler lookup and validation failures                                         |
+| Export                                                                            | Purpose                                                                              |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `createReactiveChartSchema`                                                       | Builds the chart schema from consumer-supplied providers and presenters              |
+| `ReactiveChartSchema`                                                             | The schema class, exposing `state`, layout, and series toggling                      |
+| `SeriesAdapterRegistry`                                                           | Looks up a series adapter by series type                                             |
+| `adapters`                                                                        | The six built-in adapters: area, bar, baseline, candlestick, histogram, line         |
+| `ChartLwcAdapterModifier`                                                         | Ember modifier that renders and reconciles chart state                               |
+| `DataProviderLike`                                                                | Contract a consumer implements for each data source                                  |
+| `DataStreamPresenterLike`                                                         | Contract describing a stream, its fields, and its projection                         |
+| `DataStreamPresenterFactory`                                                      | Plugin seam mapping a consumer's provider types to presenters                        |
+| `HasConfigValues`, `isBranchStructuralDescriptor`, `ChartLayoutToggleSeriesError` | Configuration, descriptor, and layout contracts consumers previously reimplemented   |
+| `AbstractDataProvider`, `AbstractDataStreamPresenter`                             | Optional generic bases for consumer implementations; all type arguments are required |
+| Layout, descriptor, stream, sample, and identity types                            | Public contracts for composing the schema and its inputs                             |
+| `SeriesValueHandler`, `SeriesValueHandlers`                                       | Typed conversion and formatting supplied by the consumer                             |
+| `ProjectedSeriesPoint`, `SeriesValueFailure`                                      | Unknown-valued projection input and modifier error notification                      |
+| `validateSeriesNumber`, `validateSeriesOhlc`                                      | Finite numeric validation for handler implementations                                |
+| `numericSeriesValueHandler`                                                       | Built-in `numeric` handler; also selected when a descriptor names no handler         |
+| `interpretProjectedPoints`                                                        | Shared batch interpreter used by the modifier; exported for host-side testing        |
+| `ChartLayout`                                                                     | Layout composition and visibility overlay used by the schema                         |
+| `SeriesValueHandlerNotFoundError` and the other `SeriesValue*` error types        | Typed handler lookup and validation failures                                         |
 
 ## Consumer wiring
 
@@ -46,7 +47,7 @@ const schema = createReactiveChartSchema({
 
 The provider contract requires a stable `identifier`, `name`, `stableLayoutKey`, stream identifiers, a default layout, `getCursor`, `getDataSince`, `getDataState`, and `groupIdFor`. `getDataState` returns plain values — cursor, data hash, sample count, projection id — so the schema never reads a consumer model. `groupIdFor` supplies the stable identity used by layout and diffing.
 
-The presenter contract requires `streamName`, `providerName`, `structuralDescriptors`, `defaultSeries`, and `projectField`, plus its provider/stream identity and data-source access. The provider supplies the layout fragment; the presenter's `defaultLayout` is a legacy member and is not read by the schema. A projected point contains a `Date` and an unknown value. A descriptor can name a registered handler that interprets that value for the selected series kind. Without a name, the built-in handler validates plain numeric values; it never unwraps domain objects.
+The presenter contract requires `streamName`, `providerName`, `structuralDescriptors`, `defaultSeries`, and `projectField`, plus its provider/stream identity and data-source access. The provider supplies the layout fragment; the presenter has no layout member. A projected point contains a `Date` and an unknown value. A descriptor can name a registered handler that interprets that value for the selected series kind. Without a name, the built-in handler validates plain numeric values; it never unwraps domain objects.
 
 Handlers return `Result`, not exceptions. OHLC series require `toOhlc`; scalar series use `toNumber`, regardless of the input object's property names. Optional `priceFormat` uses Lightweight Charts' custom-format type, including its required `minMove`. Unknown handler names and invalid values reach the modifier's optional `onError` callback as a `SeriesValueFailure` and are logged without raw values. See [the presenter guide](../../docs/guides/implement-a-presenter.md).
 
