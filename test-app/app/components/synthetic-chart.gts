@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
 import { ChartLwcAdapterModifier } from '@lightweight-schema-charts/ember';
-import type { SeriesValueFailure } from '@lightweight-schema-charts/ember';
+import type { ChartRenderFailure } from '@lightweight-schema-charts/ember';
 import type { IChartApi } from 'lightweight-charts';
 import {
   createSyntheticChart,
@@ -25,7 +25,7 @@ export default class SyntheticChart extends Component {
       remove();
     };
   };
-  handleError = ({ error }: SeriesValueFailure): void => {
+  handleError = ({ error }: ChartRenderFailure): void => {
     this.lastError = error.errorCode;
   };
 

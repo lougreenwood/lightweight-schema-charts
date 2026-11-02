@@ -4,7 +4,7 @@ Ember host for [Lightweight Schema Charts](../..). It builds a chart from declar
 
 ## Status
 
-The package renders and is covered by an acceptance test for mount, wrapped-value conversion, an incremental update, custom formatting, handler-error notification, teardown, and disposal. Its public surface is still provisional: the schema factory, contracts, and modifier are usable, but the API may change while the neutral core is extracted.
+The package renders and has browser coverage for wrapped-value conversion, incremental updates, failures and recovery, rebuilds, names, visibility, multiple panes, zero-size recovery, teardown, and disposal. Its public surface is still provisional. Neutral-core extraction is deferred; the current renderer remains Ember-first.
 
 ## What it provides
 
@@ -23,7 +23,8 @@ The package renders and is covered by an acceptance test for mount, wrapped-valu
 | `AbstractDataProvider`, `AbstractDataStreamPresenter`                      | Optional generic bases for consumer implementations; all type arguments are required |
 | Layout, descriptor, stream, sample, and identity types                     | Public contracts for composing the schema and its inputs                             |
 | `SeriesValueHandler`, `SeriesValueHandlers`                                | Typed conversion and formatting supplied by the consumer                             |
-| `ProjectedSeriesPoint`, `SeriesValueFailure`                               | Unknown-valued projection input and modifier error notification                      |
+| `ProjectedSeriesPoint`, `SeriesValueFailure`                               | Unknown-valued projection input and value-only failure details                       |
+| `ChartRenderFailure`, `NoSeriesAdapterForTypeError`                        | Modifier error notification, including an unregistered series kind                   |
 | `validateSeriesNumber`, `validateSeriesOhlc`                               | Finite numeric validation for handler implementations                                |
 | `numericSeriesValueHandler`                                                | Built-in `numeric` handler; also selected when a descriptor names no handler         |
 | `interpretProjectedPoints`                                                 | Shared batch interpreter used by the modifier; exported for host-side testing        |
@@ -50,7 +51,9 @@ The provider contract requires a stable `identifier`, `name`, `stableLayoutKey`,
 
 The presenter contract requires `streamName`, `providerName`, `structuralDescriptors`, `defaultSeries`, and `projectField`, plus its provider/stream identity and data-source access. The provider supplies the layout fragment; the presenter has no layout member. A projected point contains a `Date` and an unknown value. A descriptor can name a registered handler that interprets that value for the selected series kind. Without a name, the built-in handler validates plain numeric values; it never unwraps domain objects.
 
-Handlers return `Result`, not exceptions. OHLC series require `toOhlc`; scalar series use `toNumber`, regardless of the input object's property names. Optional `priceFormat` uses Lightweight Charts' custom-format type, including its required `minMove`. Unknown handler names and invalid values reach the modifier's optional `onError` callback as a `SeriesValueFailure` and are logged without raw values. See [the presenter guide](../../docs/guides/implement-a-presenter.md).
+Handlers return `Result`, not exceptions. OHLC series require `toOhlc`; scalar series use `toNumber`, regardless of the input object's property names. Optional `priceFormat` uses Lightweight Charts' custom-format type, including its required `minMove`. The modifier's optional `onError` callback receives a `ChartRenderFailure` with `{ error, fieldPath, groupId }`, without raw values. This includes unknown handlers, invalid values, and `NO_SERIES_ADAPTER_FOR_TYPE`. `SeriesValueFailure` describes only the value-error subset. See [the presenter guide](../../docs/guides/implement-a-presenter.md).
+
+A missing adapter is terminal for the unchanged registry and visible field configuration. It does not refetch or repeat notifications on data/name changes. Replace the registry or change the visible descriptor configuration to retry; removing the group clears its failure state. Transient fetch/value failures instead retry with a full backfill on the next reconciliation. A rejected initial group leaves no partial series; rejected updates and rebuilds keep the previous history.
 
 The modifier takes the schema state, an adapter registry, and a domain context of sample count, timeframe label, and instrument name:
 
@@ -60,6 +63,8 @@ The modifier takes the schema state, an adapter registry, and a domain context o
   {{ChartLwcAdapterModifier this.state this.registry this.domainContext}}
 ></div>
 ```
+
+Zero-size hosts are supported. The existing `autoSize`/`ResizeObserver` mechanism recovers when the container gains dimensions, without recreating the chart. Supply a `ResizeObserver` polyfill where the browser needs one.
 
 ## Known limitations
 

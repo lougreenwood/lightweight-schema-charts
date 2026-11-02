@@ -8,7 +8,8 @@
  * lives at the series group level via explicit GroupId carried by schema state).
  *
  * Change detection is handled by diffGroupStates (pure function) using GroupSnapshot for previous-cycle state and
- * GroupDiff for per-group change descriptions. The adapter only stores LWC DOM handles — no change detection fields.
+ * GroupDiff for per-group change descriptions. The adapter stores LWC DOM handles plus reconciliation bookkeeping —
+ * previous snapshots, failure state, and the previous registry identity — but never a duplicate copy of schema state.
  */
 
 import type { AnchoredPanePrimitive } from '../../chart-ui/primitives/anchored-text';
@@ -19,6 +20,25 @@ import type {
   SeriesApiLike,
 } from '../../series-adapters/_lib/_adapter';
 import type { IPaneApi, Time } from 'lightweight-charts';
+import type { NoSeriesAdapterForTypeError } from '../../series-adapters/_lib/_registry/errors';
+import type { SeriesAdapterRegistry } from '../../series-adapters/_lib/_registry';
+import type { SeriesValueFailure } from '../../series-adapters/_lib/value-handler/types';
+
+/** Consumer notification for a field that could not be rendered. Raw values are never copied into diagnostics. */
+export interface ChartRenderFailure {
+  readonly error: SeriesValueFailure['error'] | NoSeriesAdapterForTypeError;
+  readonly fieldPath: SeriesPath;
+  readonly groupId: GroupId;
+}
+
+/** One owner for transient retries and configuration-blocked groups. */
+export type GroupFailureState =
+  | { readonly kind: 'transient' }
+  | {
+      readonly kind: 'missing-adapter';
+      readonly registry: SeriesAdapterRegistry;
+      readonly configuration: string;
+    };
 
 /**
  * AdapterGroupState
@@ -110,5 +130,5 @@ export type GroupSnapshot = Readonly<{
   projectionId: string | undefined;
   providerName: string;
   streamName: string;
-  visibleFieldPathsSignature: string;
+  seriesConfiguration: string;
 }>;

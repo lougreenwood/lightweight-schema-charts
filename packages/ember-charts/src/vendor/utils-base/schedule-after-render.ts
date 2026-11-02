@@ -40,7 +40,7 @@ import { registerDestructor } from '@ember/destroyable';
  *
  *   constructor(owner: unknown, args: Args) {
  *     super(owner, args);
- *     this.#scheduleWork = createScheduleWorkHelper(this);
+ *     this.#scheduleWork = createScheduleWorkHelper({ destroyable: this, onDestroy: () => this.dispose() });
  *   }
  *
  *   modify() {
@@ -49,12 +49,15 @@ import { registerDestructor } from '@ember/destroyable';
  *     });
  *   }
  * }
- * ```;
  * ```
  */
-export function createScheduleWorkHelper(
-  destroyable: object,
-): (callback: () => void) => void {
+export function createScheduleWorkHelper({
+  destroyable,
+  onDestroy,
+}: {
+  destroyable: object;
+  onDestroy: () => void;
+}): (callback: () => void) => void {
   const pendingCleanups = new Set<() => void>();
 
   // Register destructor to cancel any pending scheduled work when object is destroyed
@@ -63,14 +66,19 @@ export function createScheduleWorkHelper(
       cleanup();
     }
     pendingCleanups.clear();
+    onDestroy();
   });
 
   return (callback: () => void): void => {
-    const cleanup = scheduleAfterRender(() => {
+    let completed = false;
+    let cleanup: () => void = () => undefined;
+    cleanup = scheduleAfterRender(() => {
+      completed = true;
       pendingCleanups.delete(cleanup);
       callback();
     });
-    pendingCleanups.add(cleanup);
+    // The SSR path runs synchronously, before `cleanup` is assigned. Do not retain an already-finished cleanup.
+    if (!completed) pendingCleanups.add(cleanup);
   };
 }
 

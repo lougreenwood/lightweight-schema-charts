@@ -40,8 +40,10 @@ export class SyntheticProvider extends AbstractDataProvider<
 > {
   static readonly dataSampleSource = SyntheticCandle;
   static readonly dataStreamIdentifiers = new Set([streamIdentifier]);
-  readonly name = 'Synthetic';
-  readonly projectionId: string;
+  @tracked name = 'Synthetic';
+  @tracked projectionId: string;
+  fetchCount = 0;
+  failFetch = false;
   protected readonly staticSide = SyntheticProvider;
   @tracked private revision = 0;
 
@@ -85,12 +87,32 @@ export class SyntheticProvider extends AbstractDataProvider<
     this.revision += 1;
   }
 
+  refresh(): void {
+    this.revision += 1;
+  }
+
+  override getDataSince({
+    cursor,
+    dataStreamIdentifier,
+  }: Parameters<DataProviderLike['getDataSince']>[0]): ReturnType<
+    DataProviderLike['getDataSince']
+  > {
+    this.fetchCount += 1;
+    if (this.failFetch) {
+      // Exercise a real typed provider failure without throwing or inventing an error shape.
+      return super.getDataSince({
+        dataStreamIdentifier: { ...dataStreamIdentifier, id: 'unavailable' },
+      });
+    }
+    return super.getDataSince({ cursor, dataStreamIdentifier });
+  }
+
   override getDataState(): ReturnType<DataProviderLike['getDataState']> {
     void this.revision;
     const last = this.dataSource.at(-1);
     return {
       cursor: last === undefined ? undefined : { time: last.time.getTime() },
-      dataHash: undefined,
+      dataHash: String(this.revision),
       dataLength: this.dataSource.length,
       projectionId: this.projectionId,
     };

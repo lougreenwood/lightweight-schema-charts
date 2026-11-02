@@ -15,7 +15,8 @@ export type { DataProviderIdentifier, DataProviderStatic, InferDataProviderIdent
 export type { BaseChartDataSample, DataStreamIdentifier, DataProviderCursor, DataStreamUpdate, DataStreamUpdateBatch, } from './chart/data-providers/_lib/data-stream/types';
 export type { TimeWindow } from './chart/data-providers/_lib/data-stream/time-window';
 export type { ProjectedSeriesPoint } from './chart/data-stream-presenters/_lib/abstract-data-stream-presenter/types';
-export type { ChartDomainContext } from './chart/modifiers/chart-lwc-adapter/types';
+export type { ChartDomainContext, ChartRenderFailure, } from './chart/modifiers/chart-lwc-adapter/types';
+export type { NoSeriesAdapterForTypeError } from './chart/series-adapters/_lib/_registry/errors';
 export type { SeriesType, NumericSeriesType, OhlcSeriesType, } from './chart/series-adapters/_lib/_registry/types';
 export type { SeriesAdapterInternalPoint, ChartTimeSeriesPointNumber, ChartTimeSeriesPointOhlc, SeriesAdapter, SeriesAdapterLike, } from './chart/series-adapters/_lib/_adapter';
 export type { AppError, AppErrorArgs, AppErrorLike, GenericErrorArgs, } from './vendor/shared-utils/errors/app-error';

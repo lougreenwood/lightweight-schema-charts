@@ -24,19 +24,18 @@
  * Usage:
  *
  * ```hbs
- * <div {{chartLwcAdapter this.reactiveSchema this.seriesAdapterRegistry this.domainContext}}></div>
+ * <div {{ChartLwcAdapterModifier this.state this.seriesAdapterRegistry this.domainContext}}></div>
  * ```
  */
-import type { ChartDomainContext } from './chart-lwc-adapter/types';
+import type { ChartDomainContext, ChartRenderFailure } from './chart-lwc-adapter/types';
 import type { ChartState } from '../schema/types';
 import type { SeriesAdapterRegistry } from '../series-adapters/_lib/_registry';
-import type { SeriesValueFailure } from '../series-adapters/_lib/value-handler/types';
 import type { IChartApi } from 'lightweight-charts';
 import Modifier from 'ember-modifier';
 interface ChartLwcAdapterModifierSignature {
     Args: {
         Named: {
-            onError?: (failure: SeriesValueFailure) => void;
+            onError?: (failure: ChartRenderFailure) => void;
             /**
              * Optional callback invoked once after the LWC chart instance is created. Receives an `applyTheme` function that
              * re-reads the current chart theme and re-applies it. Used by CanvasThemeModifier to react to OS/user theme
@@ -71,7 +70,7 @@ export default class ChartLwcAdapterModifier extends Modifier<ChartLwcAdapterMod
             applyTheme: () => void;
             chart: IChartApi;
         }) => void;
-        onError?: (failure: SeriesValueFailure) => void;
+        onError?: (failure: ChartRenderFailure) => void;
     }): void;
 }
 export {};

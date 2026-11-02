@@ -1,10 +1,12 @@
 import {
   SeriesAdapterRegistry,
+  adapters,
   createReactiveChartSchema,
 } from '@lightweight-schema-charts/ember';
 import type {
   ChartState,
   DataStreamPresenterFactory,
+  SeriesType,
 } from '@lightweight-schema-charts/ember';
 import {
   SyntheticPresenter,
@@ -22,12 +24,27 @@ export function resetChartLifecycle(): void {
   chartLifecycle.removeCount = 0;
 }
 
+export class CountingSeriesAdapterRegistry extends SeriesAdapterRegistry {
+  lookupCount = 0;
+
+  override getAdapterByType(
+    type: SeriesType
+  ): ReturnType<SeriesAdapterRegistry['getAdapterByType']> {
+    this.lookupCount += 1;
+    return super.getAdapterByType(type);
+  }
+}
+
 export function createSyntheticChart({
   candleCount,
   handlerId = 'wrapped-candle',
+  includeScalar = false,
+  missingAdapters = [],
 }: {
   candleCount: number;
   handlerId?: string;
+  includeScalar?: boolean;
+  missingAdapters?: ReadonlyArray<SeriesType>;
 }) {
   const provider = new SyntheticProvider({
     candles: Array.from(
@@ -39,6 +56,7 @@ export function createSyntheticChart({
   const presenter = new SyntheticPresenter({
     dataProvider: provider,
     handlerId,
+    includeScalar,
   });
   const presenterFactory: DataStreamPresenterFactory = {
     makeDataStreamPresenter: () => presenter,
@@ -49,6 +67,9 @@ export function createSyntheticChart({
   });
 
   return {
+    provider,
+    presenter,
+    schema,
     append: () => provider.append(),
     get domainContext() {
       return {
@@ -57,7 +78,8 @@ export function createSyntheticChart({
         tradableAssetPairName: 'SYNTH/USD',
       };
     },
-    registry: new SeriesAdapterRegistry({
+    registry: new CountingSeriesAdapterRegistry({
+      items: adapters.filter(({ id }) => !missingAdapters.includes(id)),
       valueHandlers: [syntheticValueHandler],
     }),
     get state(): ChartState {

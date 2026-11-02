@@ -6,7 +6,7 @@ Instead of imperatively creating series and pushing points, a consumer declares 
 
 ## Status
 
-The Ember package renders a working chart and is covered by an acceptance test that mounts it, updates the data, and tears it down. Nothing is published.
+The Ember package renders a working chart. Browser tests cover rendering, failure and recovery, visibility, multiple panes, automatic sizing, and disposal. Nothing is published.
 
 ![A candlestick chart rendered from synthetic data](docs/assets/chart.png)
 
@@ -90,6 +90,8 @@ mise run test
 
 Run `mise run container:shell` to open a shell inside the container, then use package-local `pnpm` commands.
 
+Builds and tests rebuild the package declarations. Do not run them concurrently with consumer typechecking or linting; a check can otherwise read the declaration tree while it is being replaced.
+
 ### Git hooks and CI
 
 `mise run install` installs a pre-commit hook that formats staged files inside the container. To install or refresh it on its own:
@@ -106,7 +108,9 @@ Every workspace package with its own dependencies needs a `node_modules` named v
 
 - The default build emits runtime modules and declarations. Git consumers must select the addon subdirectory and allow its build scripts.
 - Presenters may emit arbitrary values; a selected handler returns typed conversion results and supplies an optional custom price format.
-- One acceptance test covers a wrapped-value rendering path, updates, formatting, error notification, DOM removal, and chart disposal. Unit tests cover handler dispatch and validation. Multi-pane layouts remain unproven.
+- The synthetic provider and presenter exercise the public contracts. A reusable conformance suite for arbitrary consumer implementations is still future work.
+- `onError` receives a `ChartRenderFailure` for rejected values or missing adapters. Missing adapters remain blocked until the registry or visible descriptor configuration changes; transient fetch/value failures retry on a later reconciliation.
+- A zero-size host is supported. Lightweight Charts' existing `autoSize` observer resizes the same chart when the host becomes visible. The browser must provide `ResizeObserver`.
 
 See [ROADMAP.md](ROADMAP.md) for the engineering work behind these limitations and for the product direction still to be specified.
 

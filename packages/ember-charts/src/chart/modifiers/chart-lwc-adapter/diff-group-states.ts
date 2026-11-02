@@ -13,7 +13,48 @@
  */
 
 import type { GroupDiff, GroupSnapshot } from './types';
-import type { GroupId, SeriesGroupState } from '../../schema/types';
+import type { GroupId, SeriesGroupState, SeriesPath } from '../../schema/types';
+import {
+  findDescriptorWithParent,
+  isCompleteLeafStructuralDescriptor,
+} from '../../schema/utils';
+
+/** Encode paths and rendering options without delimiter collisions. Names and data do not reset a terminal failure. */
+export function captureSeriesConfiguration({
+  group,
+}: {
+  group: SeriesGroupState;
+}): string {
+  return JSON.stringify(
+    group.series
+      .filter(({ visible }) => visible)
+      .map(({ fieldPath }) => captureFieldConfiguration({ group, fieldPath }))
+      .sort(([left = ''], [right = '']) => left.localeCompare(right)),
+  );
+}
+
+function captureFieldConfiguration({
+  group,
+  fieldPath,
+}: {
+  group: SeriesGroupState;
+  fieldPath: SeriesPath;
+}): ReadonlyArray<string | undefined> {
+  const found = findDescriptorWithParent({
+    descriptors: group.presenter.structuralDescriptors,
+    fieldPath,
+  });
+  if (
+    found === undefined ||
+    !isCompleteLeafStructuralDescriptor(found.descriptor)
+  )
+    return [fieldPath];
+  return [
+    fieldPath,
+    found.descriptor.seriesKind,
+    found.descriptor.valueHandler,
+  ];
+}
 
 /**
  * Capture a GroupSnapshot from a SeriesGroupState for use in the next diff cycle.
@@ -24,20 +65,17 @@ export function captureGroupSnapshot({
   group: SeriesGroupState;
 }): GroupSnapshot {
   return {
-    cursor: group.dataState.cursor,
+    cursor:
+      group.dataState.cursor === undefined
+        ? undefined
+        : { ...group.dataState.cursor },
     dataHash: group.dataState.dataHash,
     dataLength: group.dataState.dataLength,
     dataStreamId: group.dataStreamIdentifier.id,
     projectionId: group.dataState.projectionId,
     providerName: group.provider.name,
     streamName: group.presenter.streamName,
-    visibleFieldPathsSignature: group.series
-      .values()
-      .filter(({ visible }) => visible)
-      .map(({ fieldPath }) => fieldPath)
-      .toArray()
-      .sort()
-      .join('|'),
+    seriesConfiguration: captureSeriesConfiguration({ group }),
   };
 }
 
@@ -96,21 +134,11 @@ export function flattenStateToGroupMap({
 }
 
 /**
- * Diff a group that exists in both previous and current snapshots.
+ * Priority cascade for data changes. Returns the highest-priority kind, or undefined when nothing changed.
  *
- * Produces independent dimensions:
- *
- * - DataChange: priority cascade (rebuilt > updated > none)
- * - NamesChanged: independent boolean
- *
- * Data change priority cascade: P0: dataStreamId changed → 'rebuilt' (underlying data source replaced) P1: had cursor,
- * now undefined → 'rebuilt' (provider replaced, cursor regressed) P2: projectionId changed → 'rebuilt' (indicator
- * config rebuilt) P3: dataLength went from 0/undefined to > 0 → 'rebuilt' (indicator data arrived in store, series was
- * created empty and needs full backfill) P4: cursor advanced → 'updated' (new data points or latest bar mutation) P5:
- * dataHash changed → 'updated' (latest bar content changed, same cursor)
- */
-/**
- * Priority cascade for data changes. Returns the highest-priority data change kind, or undefined if no data change.
+ * P0 stream identity → rebuilt; P1 cursor disappeared → rebuilt; P2 projection identity → rebuilt; P3
+ * empty-to-populated → rebuilt; P4 cursor appeared → rebuilt; P5 cursor advanced → updated; P6 content hash changed →
+ * updated.
  */
 function diffDataChange({
   group,
@@ -177,20 +205,7 @@ function diffDataChange({
   return undefined;
 }
 
-/**
- * Diff a group that exists in both previous and current snapshots.
- *
- * Produces independent dimensions:
- *
- * - DataChange: priority cascade (rebuilt > updated > none)
- * - NamesChanged: independent boolean
- *
- * Data change priority cascade: P0: dataStreamId changed → 'rebuilt' (underlying data source replaced) P1: had cursor,
- * now undefined → 'rebuilt' (provider replaced, cursor regressed) P2: projectionId changed → 'rebuilt' (indicator
- * config rebuilt) P3: dataLength went from 0/undefined to > 0 → 'rebuilt' (indicator data arrived in store, series was
- * created empty and needs full backfill) P4: cursor advanced → 'updated' (new data points or latest bar mutation) P5:
- * dataHash changed → 'updated' (latest bar content changed, same cursor)
- */
+/** Diff a group present in both snapshots, producing independent data-change and name-change dimensions. */
 function diffExistingGroup({
   group,
   previous,
@@ -198,15 +213,7 @@ function diffExistingGroup({
   group: SeriesGroupState;
   previous: GroupSnapshot;
 }): GroupDiff {
-  const visibleFieldPathsSignature = group.series
-    .values()
-    .filter(({ visible }) => visible)
-    .map(({ fieldPath }) => fieldPath)
-    .toArray()
-    .sort()
-    .join('|');
-
-  if (previous.visibleFieldPathsSignature !== visibleFieldPathsSignature) {
+  if (previous.seriesConfiguration !== captureSeriesConfiguration({ group })) {
     return {
       dataChange: 'rebuilt',
       namesChanged: false,

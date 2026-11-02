@@ -6,8 +6,8 @@ Engineering debt is listed with enough detail to act on. Product direction is li
 
 ## Correctness and lifecycle
 
-- **Prove incremental updates stay incremental.** The acceptance test asserts series identity across an update. Extend that to rebuild-triggering changes so a regression to rebuild-on-every-change still fails.
-- **Handle zero-size hosts.** `autoSize` chart creation assumes a laid-out element. Define behaviour when the host has no dimensions yet.
+- **Prove incremental updates stay incremental.** The acceptance and rendering tests assert series identity across incremental updates and rebuild paths. Extend to additional rebuild triggers as they are touched.
+- **Zero-size hosts are supported.** `autoSize` recovers when the host gains dimensions; browser coverage mounts at zero size, reveals the host, and asserts the same chart instance grows.
 
 ## Boundaries and plugins
 
@@ -122,24 +122,18 @@ Deferred until after the client milestone. The package remains Ember-first; do n
 
 ## Testing
 
-No chart tests were ported from the application. The suite is new work: one acceptance test covers a wrapped-value candlestick path, an incremental update, custom formatting, handler-error notification, and DOM removal; unit tests cover handler dispatch, validation, and lookup failures.
+No chart tests were ported from a consumer. Two acceptance tests cover wrapped-value rendering, updates, formatting, error notification, disposal, and rapid mount/unmount. Ten rendering integration tests exercise the modifier through public contracts: terminal adapter failures and resets, partial-group rollback, atomic updates, fetch/value recovery, rebuild/rename, visibility, multiple panes, zero-size recovery, and empty-to-populated focus. Unit tests cover handler dispatch, validation, and lookup failures.
 
 - **Unit.** Snapshot capture and diff precedence, including the cases that must do nothing; conversion for each series kind; projection for each point shape; layout assembly from fragments and overlay; label composition.
-- **Contract conformance.** A reusable suite that any provider and presenter can run against its own implementations, so a consumer can prove it satisfies the contract rather than discovering mismatches at runtime.
-- **Acceptance.** The current test covers mount, one incremental update, custom formatting, handler-error notification, and DOM removal. Add rebuild and rename, failure-then-retry after a rejected value, multi-pane composition, visibility toggles, rapid mount and unmount, and teardown with no post-destroy callbacks.
-- **Queued readiness coverage.** The partial-group failure, fetch failure, and retry tests queued at package readiness are still missing; add them with the acceptance extension.
-- **Lifecycle.** Assert chart disposal once implemented, not merely DOM removal.
+- **Contract conformance.** The synthetic adapter compiles against the public contracts and renders through them. A reusable suite for arbitrary consumer implementations remains future work.
+- **Remaining browser cases.** Expand to additional pane rearrangements, compound descriptor changes, and post-destroy interleavings as those behaviors are touched.
+- **Lifecycle.** Disposal and rapid mount/unmount have remove-count assertions. Disposal guards are defense-in-depth; these tests do not independently falsify every guard or post-destroy interleaving.
 - **Regression.** One deterministic synthetic fixture per case, so a failure reproduces exactly.
 - **Environment.** Runs in the repository container, headless and deterministic, alongside the existing acceptance test.
 
 ## Known defects
 
-Defects present in the current implementation. Each is open until the linked work lands.
-
-| Defect                                               | Effect                                                                          | Where                                  |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------- |
-| A series is skipped when no adapter matches its kind | The series is missing with only a log entry; no visible or programmatic signal  | `chart/modifiers/chart-lwc-adapter.ts` |
-| A zero-size host has no defined behaviour            | `autoSize` may produce a chart with no dimensions until the element is laid out | `chart/modifiers/chart-lwc-adapter.ts` |
+The missing-adapter and zero-size gaps are resolved at the modifier boundary. Missing adapters report `NO_SERIES_ADAPTER_FOR_TYPE` and remain blocked for unchanged configuration. Zero-size hosts recover through the existing automatic-size observer when dimensions become available. Neither requires a new rendering subsystem.
 
 ## Delivery
 

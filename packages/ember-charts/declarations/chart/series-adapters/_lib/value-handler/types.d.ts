@@ -12,7 +12,7 @@ export interface SeriesValueHandler {
     toOhlc?(value: unknown): Result<InterpretedOhlc, SeriesValueOhlcValidationError>;
 }
 export type SeriesValueHandlers = ReadonlyArray<SeriesValueHandler>;
-/** Terminal notification from the modifier, without copying the consumer's raw value into diagnostics. */
+/** Value-only notification from the modifier; these failures retry. Raw consumer values are never copied. */
 export interface SeriesValueFailure {
     readonly error: SeriesValueHandlerNotFoundError | SeriesValueNumberValidationError | SeriesValueOhlcConverterMissingError | SeriesValueOhlcValidationError | SeriesValuePointsEmptyError;
     readonly fieldPath: SeriesPath;

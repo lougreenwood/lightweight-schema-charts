@@ -13,6 +13,10 @@
  */
 import type { GroupDiff, GroupSnapshot } from './types';
 import type { GroupId, SeriesGroupState } from '../../schema/types';
+/** Encode paths and rendering options without delimiter collisions. Names and data do not reset a terminal failure. */
+export declare function captureSeriesConfiguration({ group, }: {
+    group: SeriesGroupState;
+}): string;
 /**
  * Capture a GroupSnapshot from a SeriesGroupState for use in the next diff cycle.
  */

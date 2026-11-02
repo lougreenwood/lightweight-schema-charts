@@ -9,6 +9,7 @@ import type {
   DataStreamIdentifier,
   ProjectedSeriesPoint,
   SeriesValueHandler,
+  SeriesPath,
 } from '@lightweight-schema-charts/ember';
 import {
   SyntheticCandle,
@@ -38,24 +39,58 @@ export const syntheticValueHandler: SeriesValueHandler = {
   },
 };
 
+function projectSyntheticValue({
+  sample,
+  fieldPath,
+  rejectField,
+}: {
+  sample: BaseChartDataSample<object, object, DataStreamIdentifier>;
+  fieldPath: SeriesPath;
+  rejectField: SeriesPath | undefined;
+}): unknown {
+  if (rejectField === fieldPath) return 'rejected';
+  if (fieldPath === 'data.close' && sample.data instanceof SyntheticCandle)
+    return sample.data.close;
+  return { candle: sample.data };
+}
+
 export class SyntheticPresenter extends AbstractDataStreamPresenter<
   SyntheticProvider,
   typeof streamIdentifier,
   SyntheticCandle[]
 > {
-  readonly handlerId: string;
-  readonly streamName = 'Synthetic close';
+  handlerId: string;
+  streamName = 'Synthetic close';
+  label = 'Candle';
+  rejectField: SeriesPath | undefined;
+  readonly includeScalar: boolean;
   readonly isConfigurable = false;
 
   constructor({
     dataProvider,
     handlerId,
+    includeScalar = false,
   }: {
     dataProvider: SyntheticProvider;
     handlerId: string;
+    includeScalar?: boolean;
   }) {
     super({ dataProvider, dataStreamIdentifier: streamIdentifier });
     this.handlerId = handlerId;
+    this.includeScalar = includeScalar;
+    this._initializeDescriptors();
+  }
+
+  configure({
+    handlerId = this.handlerId,
+    label = this.label,
+  }: {
+    handlerId?: string;
+    label?: string;
+  }): void {
+    this.handlerId = handlerId;
+    this.label = label;
+    this.streamName = label;
     this._initializeDescriptors();
   }
 
@@ -73,10 +108,23 @@ export class SyntheticPresenter extends AbstractDataStreamPresenter<
           fieldPath: 'data.candle',
         },
         kind: 'series',
-        label: 'Candle',
+        label: this.label,
         seriesKind: 'candlestick',
         valueHandler: this.handlerId,
       },
+      ...(this.includeScalar
+        ? ([
+            {
+              identifier: {
+                dataStreamIdentifier: streamIdentifier,
+                fieldPath: 'data.close',
+              },
+              kind: 'series' as const,
+              label: 'Close',
+              seriesKind: 'line' as const,
+            },
+          ] satisfies Array<BaseStructuralDescriptor<typeof streamIdentifier>>)
+        : []),
     ]);
   }
 
@@ -88,15 +136,21 @@ export class SyntheticPresenter extends AbstractDataStreamPresenter<
 
   protected _projectFieldImplementation({
     dataSamples,
+    fieldPath,
   }: {
     dataSamples: ReadonlySet<
       BaseChartDataSample<object, object, DataStreamIdentifier>
     >;
+    fieldPath: SeriesPath;
   }): ReadonlySet<ProjectedSeriesPoint> {
     return new Set(
       dataSamples.values().map((sample) => ({
         time: sample.time,
-        value: { candle: sample.data },
+        value: projectSyntheticValue({
+          sample,
+          fieldPath,
+          rejectField: this.rejectField,
+        }),
       }))
     );
   }

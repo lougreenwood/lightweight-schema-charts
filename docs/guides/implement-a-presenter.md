@@ -95,7 +95,13 @@ const registry = new SeriesAdapterRegistry({
 
 Set `valueHandler: 'measurement'` on a scalar descriptor. For `bar` and `candlestick`, implement `toOhlc` and return `validateSeriesOhlc` over the interpreted four numbers. Dispatch comes from `seriesKind`, not from whether the input happens to have an `open` property. Both methods return typed `Result` values; handlers must not throw. Numeric output is checked for finiteness even after a handler reports success.
 
-An absent handler name selects the built-in `numeric` handler, which validates plain numeric values. A descriptor may also name `'numeric'` explicitly. An unknown selected name is an error, not a fallback. The modifier logs failures and calls `onError`, when supplied, with `{ error, fieldPath, groupId }`; consumers can show `error.errorCode` in their own UI. A failed interpretation creates no series; a failed rebuild keeps the previous one; the group is retried on the next reconciliation. `onReady` supplies `{ chart, applyTheme }` for host integrations.
+An absent handler name selects the built-in `numeric` handler, which validates plain numeric values. A descriptor may also name `'numeric'` explicitly. An unknown selected name is an error, not a fallback. The modifier logs failures and calls `onError`, when supplied, with a `ChartRenderFailure`: `{ error, fieldPath, groupId }`. Consumers can show `error.errorCode` in their own UI.
+
+An initial group failure leaves no partial series. Incremental updates interpret every visible field before applying any field; a rejected update or rebuild preserves the previous history. Transient fetch/value failures retry with a full backfill on the next reconciliation, not on a timer.
+
+An adapter registry may intentionally contain only a subset of series kinds. An unsupported kind reports `NO_SERIES_ADAPTER_FOR_TYPE` once per affected field for the current configuration. Data and name changes do not retry it. Replacing the registry or changing the visible field configuration retries the group; removing it clears the blocked state. `NoSeriesAdapterForTypeError` is exported for consumers. `SeriesValueFailure` remains the narrower value-only notification type.
+
+`onReady` supplies `{ chart, applyTheme }` for host integrations. A zero-size host is not an error: existing automatic sizing recovers when the host becomes visible, provided `ResizeObserver` is available.
 
 The exported presenter base is `AbstractDataStreamPresenter<TDataProvider, TDataStreamIdentifier, TDataSource>`. Every argument is required. See `test-app/app/synthetic/synthetic-presenter.ts` for a cast-free implementation over wrapped candle values.
 

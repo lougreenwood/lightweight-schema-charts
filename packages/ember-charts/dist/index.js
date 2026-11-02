@@ -3581,6 +3581,32 @@ function createPaneLabelPrimitive(text) {
  * guards requiring "both defined." No silent skips.
  */
 
+
+/** Encode paths and rendering options without delimiter collisions. Names and data do not reset a terminal failure. */
+function captureSeriesConfiguration({
+  group
+}) {
+  return JSON.stringify(group.series.filter(({
+    visible
+  }) => visible).map(({
+    fieldPath
+  }) => captureFieldConfiguration({
+    group,
+    fieldPath
+  })).sort(([left = ''], [right = '']) => left.localeCompare(right)));
+}
+function captureFieldConfiguration({
+  group,
+  fieldPath
+}) {
+  const found = findDescriptorWithParent({
+    descriptors: group.presenter.structuralDescriptors,
+    fieldPath
+  });
+  if (found === undefined || !isCompleteLeafStructuralDescriptor(found.descriptor)) return [fieldPath];
+  return [fieldPath, found.descriptor.seriesKind, found.descriptor.valueHandler];
+}
+
 /**
  * Capture a GroupSnapshot from a SeriesGroupState for use in the next diff cycle.
  */
@@ -3588,18 +3614,18 @@ function captureGroupSnapshot({
   group
 }) {
   return {
-    cursor: group.dataState.cursor,
+    cursor: group.dataState.cursor === undefined ? undefined : {
+      ...group.dataState.cursor
+    },
     dataHash: group.dataState.dataHash,
     dataLength: group.dataState.dataLength,
     dataStreamId: group.dataStreamIdentifier.id,
     projectionId: group.dataState.projectionId,
     providerName: group.provider.name,
     streamName: group.presenter.streamName,
-    visibleFieldPathsSignature: group.series.values().filter(({
-      visible
-    }) => visible).map(({
-      fieldPath
-    }) => fieldPath).toArray().sort().join('|')
+    seriesConfiguration: captureSeriesConfiguration({
+      group
+    })
   };
 }
 
@@ -3659,21 +3685,11 @@ function flattenStateToGroupMap({
 }
 
 /**
- * Diff a group that exists in both previous and current snapshots.
+ * Priority cascade for data changes. Returns the highest-priority kind, or undefined when nothing changed.
  *
- * Produces independent dimensions:
- *
- * - DataChange: priority cascade (rebuilt > updated > none)
- * - NamesChanged: independent boolean
- *
- * Data change priority cascade: P0: dataStreamId changed → 'rebuilt' (underlying data source replaced) P1: had cursor,
- * now undefined → 'rebuilt' (provider replaced, cursor regressed) P2: projectionId changed → 'rebuilt' (indicator
- * config rebuilt) P3: dataLength went from 0/undefined to > 0 → 'rebuilt' (indicator data arrived in store, series was
- * created empty and needs full backfill) P4: cursor advanced → 'updated' (new data points or latest bar mutation) P5:
- * dataHash changed → 'updated' (latest bar content changed, same cursor)
- */
-/**
- * Priority cascade for data changes. Returns the highest-priority data change kind, or undefined if no data change.
+ * P0 stream identity → rebuilt; P1 cursor disappeared → rebuilt; P2 projection identity → rebuilt; P3
+ * empty-to-populated → rebuilt; P4 cursor appeared → rebuilt; P5 cursor advanced → updated; P6 content hash changed →
+ * updated.
  */
 function diffDataChange({
   group,
@@ -3723,30 +3739,14 @@ function diffDataChange({
   return undefined;
 }
 
-/**
- * Diff a group that exists in both previous and current snapshots.
- *
- * Produces independent dimensions:
- *
- * - DataChange: priority cascade (rebuilt > updated > none)
- * - NamesChanged: independent boolean
- *
- * Data change priority cascade: P0: dataStreamId changed → 'rebuilt' (underlying data source replaced) P1: had cursor,
- * now undefined → 'rebuilt' (provider replaced, cursor regressed) P2: projectionId changed → 'rebuilt' (indicator
- * config rebuilt) P3: dataLength went from 0/undefined to > 0 → 'rebuilt' (indicator data arrived in store, series was
- * created empty and needs full backfill) P4: cursor advanced → 'updated' (new data points or latest bar mutation) P5:
- * dataHash changed → 'updated' (latest bar content changed, same cursor)
- */
+/** Diff a group present in both snapshots, producing independent data-change and name-change dimensions. */
 function diffExistingGroup({
   group,
   previous
 }) {
-  const visibleFieldPathsSignature = group.series.values().filter(({
-    visible
-  }) => visible).map(({
-    fieldPath
-  }) => fieldPath).toArray().sort().join('|');
-  if (previous.visibleFieldPathsSignature !== visibleFieldPathsSignature) {
+  if (previous.seriesConfiguration !== captureSeriesConfiguration({
+    group
+  })) {
     return {
       dataChange: 'rebuilt',
       namesChanged: false
@@ -3826,7 +3826,7 @@ const pinoLogger = logger;
  *
  *   constructor(owner: unknown, args: Args) {
  *     super(owner, args);
- *     this.#scheduleWork = createScheduleWorkHelper(this);
+ *     this.#scheduleWork = createScheduleWorkHelper({ destroyable: this, onDestroy: () => this.dispose() });
  *   }
  *
  *   modify() {
@@ -3835,10 +3835,12 @@ const pinoLogger = logger;
  *     });
  *   }
  * }
- * ```;
  * ```
  */
-function createScheduleWorkHelper(destroyable) {
+function createScheduleWorkHelper({
+  destroyable,
+  onDestroy
+}) {
   const pendingCleanups = new Set();
 
   // Register destructor to cancel any pending scheduled work when object is destroyed
@@ -3847,13 +3849,18 @@ function createScheduleWorkHelper(destroyable) {
       cleanup();
     }
     pendingCleanups.clear();
+    onDestroy();
   });
   return callback => {
-    const cleanup = scheduleAfterRender(() => {
+    let completed = false;
+    let cleanup = () => undefined;
+    cleanup = scheduleAfterRender(() => {
+      completed = true;
       pendingCleanups.delete(cleanup);
       callback();
     });
-    pendingCleanups.add(cleanup);
+    // The SSR path runs synchronously, before `cleanup` is assigned. Do not retain an already-finished cleanup.
+    if (!completed) pendingCleanups.add(cleanup);
   };
 }
 
@@ -3899,7 +3906,7 @@ function scheduleAfterRender(callback) {
  * Usage:
  *
  * ```hbs
- * <div {{chartLwcAdapter this.reactiveSchema this.seriesAdapterRegistry this.domainContext}}></div>
+ * <div {{ChartLwcAdapterModifier this.state this.seriesAdapterRegistry this.domainContext}}></div>
  * ```
  */
 
@@ -3949,7 +3956,7 @@ class ChartLwcAdapterModifier extends Modifier {
       });
 
       // Apply focus range once after first data load
-      if (!this.#hasAppliedInitialFocusRange && this.#paneStates.size > 0) {
+      if (!this.#hasAppliedInitialFocusRange && this.#paneStates.size > 0 && domainContext.marketDataDataSampleCount > 0) {
         this.#applyInitialFocusRange({
           chart: this.#chart,
           domainContext
@@ -3966,8 +3973,9 @@ class ChartLwcAdapterModifier extends Modifier {
     chart?.remove();
     this.#paneStates.clear();
     this.#previousSnapshots.clear();
-    this.#needsBackfill.clear();
+    this.#groupFailures.clear();
     this.#previousDomainContext = undefined;
+    this.#previousRegistry = undefined;
     this.#hasAppliedInitialFocusRange = false;
   }
 
@@ -3977,6 +3985,7 @@ class ChartLwcAdapterModifier extends Modifier {
   #chart;
   #disposed = false;
   #onError;
+  #previousRegistry;
 
   /**
    * Whether the initial focus range has been applied after the first data load.
@@ -4001,20 +4010,22 @@ class ChartLwcAdapterModifier extends Modifier {
   #previousSnapshots = new Map();
 
   /**
-   * Groups whose value interpretation failed. They keep no partial series and are retried on the next reconciliation
-   * cycle, so a transient handler failure cannot leave a plausible but incomplete chart.
+   * Transient failures retry on the next reconciliation. A missing adapter waits for a registry or visible descriptor
+   * configuration change. Both states share this single retry owner.
    */
-  #needsBackfill = new Set();
+  #groupFailures = new Map();
 
   /**
    * Lifecycle-aware scheduler that cancels pending work on destruction.
    *
-   * Disposal registers before the scheduler so LIFO destructor order cancels queued work first, then disposes the chart.
+   * One destructor cancels queued work before disposing the chart; no cross-destructor order is assumed.
    */
   #scheduleWork = this.#makeScheduleWork();
   #makeScheduleWork() {
-    registerDestructor(this, () => this.#disposeChart());
-    return createScheduleWorkHelper(this);
+    return createScheduleWorkHelper({
+      destroyable: this,
+      onDestroy: () => this.#disposeChart()
+    });
   }
 
   /**
@@ -4165,6 +4176,15 @@ class ChartLwcAdapterModifier extends Modifier {
       presenter,
       provider
     } = enrichedGroup;
+    this.#groupFailures.delete(groupId);
+    if (!enrichedGroup.series.some(({
+      visible
+    }) => visible)) return {
+      series: new Map()
+    };
+    const configuration = captureSeriesConfiguration({
+      group: enrichedGroup
+    });
 
     // Fetch data (full backfill — no cursor)
     const dataSamples = this.#fetchSamples({
@@ -4175,7 +4195,9 @@ class ChartLwcAdapterModifier extends Modifier {
         pinoLogger.error({
           error
         }, '[ChartLwcAdapter] failed to fetch samples for a new group');
-        this.#needsBackfill.add(groupId);
+        this.#groupFailures.set(groupId, {
+          kind: 'transient'
+        });
         return undefined;
       },
       Ok: samples => samples
@@ -4191,6 +4213,7 @@ class ChartLwcAdapterModifier extends Modifier {
       if (!seriesLayout.visible) continue;
       const seriesState = this.#createSeries({
         chart,
+        configuration,
         dataSamples,
         fieldPath: seriesLayout.fieldPath,
         groupId,
@@ -4212,10 +4235,12 @@ class ChartLwcAdapterModifier extends Modifier {
           seriesApi: seriesState.seriesApi
         });
       }
-      this.#needsBackfill.add(groupId);
+      if (!this.#groupFailures.has(groupId)) this.#groupFailures.set(groupId, {
+        kind: 'transient'
+      });
       return undefined;
     }
-    this.#needsBackfill.delete(groupId);
+    this.#groupFailures.delete(groupId);
 
     // Apply scaleMargins to the price scale via any series in this group (all share the same priceScaleId)
     if (enrichedGroup.priceScale?.scaleMargins) {
@@ -4236,6 +4261,7 @@ class ChartLwcAdapterModifier extends Modifier {
    */
   #createSeries({
     chart,
+    configuration,
     dataSamples,
     fieldPath,
     groupId,
@@ -4270,10 +4296,16 @@ class ChartLwcAdapterModifier extends Modifier {
     const adapterResult = seriesAdapterRegistry.getAdapterByType(descriptor.seriesKind);
     return adapterResult.match({
       Err: error => {
-        pinoLogger.error({
+        this.#groupFailures.set(groupId, {
+          kind: 'missing-adapter',
+          registry: seriesAdapterRegistry,
+          configuration
+        });
+        this.#reportFailure({
           error,
-          seriesKind: descriptor.seriesKind
-        }, '[ChartLwcAdapter] no adapter for series kind');
+          fieldPath,
+          groupId
+        });
         return undefined;
       },
       Ok: adapter => {
@@ -4286,7 +4318,7 @@ class ChartLwcAdapterModifier extends Modifier {
           id: descriptor.valueHandler
         }).match({
           Err: error => {
-            this.#reportValueFailure({
+            this.#reportFailure({
               error,
               fieldPath,
               groupId
@@ -4294,7 +4326,7 @@ class ChartLwcAdapterModifier extends Modifier {
             return undefined;
           },
           Ok: valueHandler => {
-            const interpreted = dataSamples.size === 0 ? ok(new Set()) : this.#interpretSeriesData({
+            const interpreted = dataSamples.size === 0 ? ok(new Set()) : interpretProjectedPoints({
               points: presenter.projectField({
                 dataSamples,
                 fieldPath
@@ -4304,7 +4336,7 @@ class ChartLwcAdapterModifier extends Modifier {
             });
             return interpreted.match({
               Err: error => {
-                this.#reportValueFailure({
+                this.#reportFailure({
                   error,
                   fieldPath,
                   groupId
@@ -4469,21 +4501,27 @@ class ChartLwcAdapterModifier extends Modifier {
     const currentGroups = flattenStateToGroupMap({
       panes: state.panes
     });
+    const registryChanged = this.#previousRegistry !== undefined && this.#previousRegistry !== seriesAdapterRegistry;
     const diffs = diffGroupStates({
       currentGroups,
       previousSnapshots: this.#previousSnapshots
     });
 
-    // Retry groups whose previous value interpretation failed. Groups that are structurally added below are skipped;
-    // this loop handles a failed earlier add or rebuild without duplicating Phase 1.
+    // Retry groups whose previous fetch or value interpretation failed. A missing adapter is instead blocked until its
+    // registry or visible configuration changes. Groups structurally added below are skipped, so this does not duplicate
+    // Phase 1.
     const retriedGroups = new Set();
-    for (const groupId of this.#needsBackfill.values().toArray()) {
+    for (const [groupId, failureState] of this.#groupFailures.entries().toArray()) {
       if (diffs.get(groupId)?.structural === 'added') continue;
       const enrichedGroup = currentGroups.get(groupId);
       if (!enrichedGroup) {
-        this.#needsBackfill.delete(groupId);
+        this.#groupFailures.delete(groupId);
         continue;
       }
+      retriedGroups.add(groupId);
+      if (failureState.kind === 'missing-adapter' && failureState.registry === seriesAdapterRegistry && failureState.configuration === captureSeriesConfiguration({
+        group: enrichedGroup
+      })) continue;
       const hasPane = this.#paneStates.values().some(paneState => paneState.seriesGroups.has(groupId));
       if (hasPane) {
         this.#rebuildGroupData({
@@ -4502,7 +4540,6 @@ class ChartLwcAdapterModifier extends Modifier {
           state
         });
       }
-      retriedGroups.add(groupId);
     }
 
     // Phase 1 — Structural: removals first (avoids index confusion), then additions
@@ -4513,6 +4550,11 @@ class ChartLwcAdapterModifier extends Modifier {
         groupId
       });
     }
+
+    // Removing a pane renumbers every later LWC pane. Refresh keys before routing additions by layout index.
+    const currentPanes = this.#paneStates.values().toArray();
+    this.#paneStates.clear();
+    currentPanes.forEach(paneState => this.#paneStates.set(paneState.paneApi.paneIndex(), paneState));
     for (const [groupId, diff] of diffs) {
       if (diff.structural !== 'added') continue;
       const enrichedGroup = currentGroups.get(groupId);
@@ -4535,11 +4577,13 @@ class ChartLwcAdapterModifier extends Modifier {
     // Phase 2 — Data: process changes for groups that exist in both previous and current
     for (const [groupId, diff] of diffs) {
       if (diff.structural) continue; // Already handled in Phase 1
-      if (retriedGroups.has(groupId)) continue;
+
       const enrichedGroup = currentGroups.get(groupId);
       if (!enrichedGroup) continue;
-      switch (diff.dataChange) {
-        case 'rebuilt':
+      switch (true) {
+        case retriedGroups.has(groupId):
+          break;
+        case registryChanged || diff.dataChange === 'rebuilt':
           {
             this.#rebuildGroupData({
               chart,
@@ -4549,7 +4593,7 @@ class ChartLwcAdapterModifier extends Modifier {
             });
             break;
           }
-        case 'updated':
+        case diff.dataChange === 'updated':
           {
             const previousSnapshot = this.#previousSnapshots.get(groupId);
             this.#updateGroupData({
@@ -4579,6 +4623,7 @@ class ChartLwcAdapterModifier extends Modifier {
       }));
     }
     this.#previousDomainContext = domainContext;
+    this.#previousRegistry = seriesAdapterRegistry;
   }
 
   /**
@@ -4635,6 +4680,7 @@ class ChartLwcAdapterModifier extends Modifier {
     chart,
     groupId
   }) {
+    this.#groupFailures.delete(groupId);
     for (const [paneIndex, paneState] of this.#paneStates) {
       const existingGroup = paneState.seriesGroups.get(groupId);
       if (!existingGroup) continue;
@@ -4695,6 +4741,10 @@ class ChartLwcAdapterModifier extends Modifier {
       presenter,
       provider
     } = enrichedGroup;
+    const adapterGroupState = this.#findAdapterGroupState({
+      groupId
+    });
+    if (!adapterGroupState) return;
 
     // Fetch data since previous cursor
     const dataSamples = this.#fetchSamples({
@@ -4706,18 +4756,15 @@ class ChartLwcAdapterModifier extends Modifier {
         pinoLogger.error({
           error
         }, '[ChartLwcAdapter] failed to fetch samples for an update');
-        this.#needsBackfill.add(groupId);
+        this.#groupFailures.set(groupId, {
+          kind: 'transient'
+        });
         return undefined;
       },
       Ok: samples => samples
     });
     if (dataSamples === undefined || dataSamples.size === 0) return;
-
-    // Find the adapter group state for this group
-    const adapterGroupState = this.#findAdapterGroupState({
-      groupId
-    });
-    if (!adapterGroupState) return;
+    const pendingUpdates = new Map();
 
     // Update each visible series
     for (const seriesState of enrichedGroup.series) {
@@ -4735,14 +4782,16 @@ class ChartLwcAdapterModifier extends Modifier {
       });
       handlerResult.match({
         Err: error => {
-          this.#reportValueFailure({
+          this.#reportFailure({
             error,
             fieldPath: seriesState.fieldPath,
             groupId
           });
-          this.#needsBackfill.add(groupId);
+          this.#groupFailures.set(groupId, {
+            kind: 'transient'
+          });
         },
-        Ok: handler => this.#interpretSeriesData({
+        Ok: handler => interpretProjectedPoints({
           points: presenter.projectField({
             dataSamples,
             fieldPath: seriesState.fieldPath
@@ -4751,38 +4800,34 @@ class ChartLwcAdapterModifier extends Modifier {
           seriesKind: fieldDescriptor.seriesKind
         }).match({
           Err: error => {
-            this.#reportValueFailure({
+            this.#reportFailure({
               error,
               fieldPath: seriesState.fieldPath,
               groupId
             });
-            this.#needsBackfill.add(groupId);
+            this.#groupFailures.set(groupId, {
+              kind: 'transient'
+            });
           },
           Ok: projectedData => {
             const incrementalProjectedData = previousCursor === undefined ? projectedData : new Set(projectedData.values().filter(point => point.time.getTime() >= previousCursor.time));
             if (incrementalProjectedData.size > 0) {
-              cachedSeries.adapter.updateSeries({
-                data: incrementalProjectedData,
-                seriesApi: cachedSeries.seriesApi
-              });
+              pendingUpdates.set(cachedSeries, incrementalProjectedData);
             }
           }
         })
       });
     }
+    if (this.#groupFailures.has(groupId)) return;
+    pendingUpdates.forEach((data, {
+      adapter,
+      seriesApi
+    }) => adapter.updateSeries({
+      data,
+      seriesApi
+    }));
   }
-  #interpretSeriesData({
-    points,
-    handler,
-    seriesKind
-  }) {
-    return interpretProjectedPoints({
-      points,
-      handler,
-      seriesKind
-    });
-  }
-  #reportValueFailure({
+  #reportFailure({
     error,
     fieldPath,
     groupId
@@ -4791,7 +4836,7 @@ class ChartLwcAdapterModifier extends Modifier {
       error,
       fieldPath,
       groupId
-    }, '[ChartLwcAdapter] series value interpretation failed');
+    }, '[ChartLwcAdapter] series rendering failed');
     this.#onError?.({
       error,
       fieldPath,

@@ -37,7 +37,7 @@
  *
  *   constructor(owner: unknown, args: Args) {
  *     super(owner, args);
- *     this.#scheduleWork = createScheduleWorkHelper(this);
+ *     this.#scheduleWork = createScheduleWorkHelper({ destroyable: this, onDestroy: () => this.dispose() });
  *   }
  *
  *   modify() {
@@ -46,10 +46,12 @@
  *     });
  *   }
  * }
- * ```;
  * ```
  */
-export declare function createScheduleWorkHelper(destroyable: object): (callback: () => void) => void;
+export declare function createScheduleWorkHelper({ destroyable, onDestroy, }: {
+    destroyable: object;
+    onDestroy: () => void;
+}): (callback: () => void) => void;
 /**
  * Schedules a callback to run after the current render pass completes.
  *

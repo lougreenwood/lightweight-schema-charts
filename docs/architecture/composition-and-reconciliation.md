@@ -18,12 +18,12 @@ Every group carries a stable identity supplied by its provider. That identity is
 
 ## Change detection
 
-Before each reconcile, the modifier captures a snapshot per group:
+After each reconcile, the modifier captures a snapshot per group for the next comparison:
 
 - stream identity and projection identity
 - cursor, sample count, and content hash
 - provider and stream display names
-- the sorted list of visible field paths
+- an unambiguous encoding of visible field paths, series kinds, and handler identifiers
 
 It then compares the previous snapshots with the current ones. The result is independent dimensions, not a single status:
 
@@ -39,7 +39,7 @@ Absent means "nothing to do in this dimension". There is no separate "none" valu
 
 Rebuild wins whenever incremental updating would be wrong. In priority order:
 
-1. The visible field set changed. The series shape changed, so it is rebuilt, and the rebuild already uses current names.
+1. The visible field configuration changed. Paths, series kinds, and handler identifiers determine the rendering shape. A replacement registry also rebuilds existing groups.
 2. The stream identity changed. A different source cannot be appended to the old series.
 3. The cursor disappeared. The provider regressed; appending would replay history.
 4. The known projection identity changed. The values mean something different now.
@@ -54,22 +54,27 @@ Cases that deliberately do nothing: a cursor version change alone, a time regres
 
 The modifier schedules work after render, then:
 
-1. Processes removals first, so indices stay stable.
-2. Adds new groups: reuse or create the pane, interpret projected values, then create the visible series and backfill. A failed interpretation creates no series.
-3. Rebuilds changed groups: build the replacement first, then remove the old series and swap it in. A failed rebuild keeps the previous series.
-4. Updates changed groups: fetch since the previous cursor, interpret, and push to the existing series.
-5. Refreshes names when they changed or when pane-level labels changed.
-6. Captures fresh snapshots for the next cycle, after applying.
+1. Retries or resumes groups from the previous failure map. A group blocked by a missing adapter is skipped unless its registry or visible configuration changed.
+2. Processes removals, then refreshes pane-index keys, because Lightweight Charts renumbers later panes after a pane is removed.
+3. Adds new groups: reuse or create the pane, interpret projected values, then create the visible series and backfill. A failed interpretation creates no series.
+4. Rebuilds changed groups: build the replacement first, then remove the old series and swap it in. A failed rebuild keeps the previous series.
+5. Updates changed groups: fetch since the previous cursor, interpret all visible fields, then push to the existing series only if every field succeeded.
+6. Refreshes names when they changed or when pane-level labels changed.
+7. Captures fresh snapshots for the next cycle, after applying.
 
-A group whose interpretation fails is marked for backfill and retried on the next reconciliation cycle. The retry rebuilds the group from the provider; it does not leave a partial series in place.
+A transient fetch/value failure marks the group for full backfill on the next reconciliation. A missing adapter instead blocks the group until the registry or visible descriptor configuration changes. Both states use one retry map. Removing a group clears its failure state. `onError` reports missing-adapter and value failures as `ChartRenderFailure`, without raw values.
 
-Snapshots are captured after apply because that is the state the next cycle will compare against.
+Initial failures leave no partial group. Rejected updates and rebuilds retain previous history. Pane removals refresh the live index keys before routing additions, because Lightweight Charts renumbers later panes.
+
+Snapshots copy the cursor rather than aliasing consumer state. Failed attempts are still captured; the retry map ensures the next reconciliation backfills missed history.
 
 ## Lifecycle
 
 The chart is created once, on first reconciliation, and reused. Scheduled work is cancelled when the host is destroyed.
 
-Teardown cancels scheduled work and disposes the chart instance exactly once. Removing the host element also removes the canvas.
+One destructor cancels scheduled work before disposing the chart instance. It does not rely on ordering between separate destructors. Disposal is idempotent; removing the host element also removes the canvas.
+
+A zero-size host uses the same chart and the existing automatic-size observer. It recovers when the host becomes visible; no second resize mechanism is installed. Initial focus waits until samples exist.
 
 ## Related documents
 
